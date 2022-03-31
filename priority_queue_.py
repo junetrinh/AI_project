@@ -63,7 +63,7 @@ class priority_queue:
         if (left_i <= self.last_i
                 and right_i <= self.last_i ): 
             highest_priority = left_i
-            if(self.heap[right_i][0] < self.heap[left_i][0]):
+            if(self.heap[right_i][0] <= self.heap[left_i][0]):
                 highest_priority = right_i
 
         return highest_priority
@@ -75,7 +75,7 @@ class priority_queue:
         item_i = item_i_
         highest_p_child = self._find_highest_priority_child_i(item_i)
         
-        while item_i < self.last_i and highest_p_child > -1 and self.heap[highest_p_child][SORT_KEY] <= self.heap[item_i][SORT_KEY]:
+        while item_i < self.last_i and highest_p_child > -1 and self.heap[highest_p_child][SORT_KEY] < self.heap[item_i][SORT_KEY]:
             # perform swap
             dummy_node = self.heap[item_i]
             if print_flag:
