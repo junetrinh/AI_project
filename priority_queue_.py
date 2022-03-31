@@ -110,6 +110,11 @@ class priority_queue:
         HIGHEST_PRIORITY = 0
         OUT_OF_ORDER_I = 0
 
+        if(self.last_i == 0):
+            return_node = self.heap[self.last_i]
+            self.last_i = 0
+            self.heap = []
+            return return_node
         # swap the lowest priority/ root node of the tree with the outter most leaf
         return_node = self.heap[HIGHEST_PRIORITY]
 
@@ -119,18 +124,18 @@ class priority_queue:
         # remove and fixing the heap by perform a down heap
         self.heap.pop(self.last_i)
         self.last_i -= 1
-        if print_flag:
-            print("\n\nBefore fix:----------------------------------------------------------------")
-            for (i, item) in self.heap:
-                print("(" + str(i) + "," + item + ")")
-            print("-- --")
+        # if print_flag:
+        #     print("\n\nBefore fix:----------------------------------------------------------------")
+        #     for (i, item) in self.heap:
+        #         print("(" + str(i) + "," + item + ")")
+        #     print("-- --")
 
         self._down_heap(OUT_OF_ORDER_I)
-        if print_flag:
-            print("After fix:")
-            for (i, item) in self.heap:
-                print("(" + str(i) + "," + item + ")")
-            print("-- ------------------------------------------------------ \n")
+        # if print_flag:
+        #     print("After fix:")
+        #     for (i, item) in self.heap:
+        #         print("(" + str(i) + "," + item + ")")
+        #     print("-- ------------------------------------------------------ \n")
         return return_node
 
     def clear(self):
@@ -143,20 +148,3 @@ class priority_queue:
         return -1
     
         
-def print_node(node):
-    print("(" + str(node[0]) + "," +  node[1] + ")")
-
-p_queue = priority_queue() 
-
-p_queue.add(0, "c")
-p_queue.add(25, "d")
-p_queue.add(1, "e")
-p_queue.add(1, "e")
-p_queue.add(8, "g")
-p_queue.add(18, "f")
-p_queue.add(4, "cc")
-
-while p_queue.last_i > -1:
-    node = p_queue.pop()
-
-    print_node(node)
