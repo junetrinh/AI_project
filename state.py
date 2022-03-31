@@ -27,7 +27,7 @@ class State:
                   f"h: {self.heuristic}, fn: {self.fn}, "
                   f"gn: {self.gn}]")
         if self.last:
-            print(f"[({self.last.r}, {self.last.q}), "
+            print(f"\tParent:[({self.last.r}, {self.last.q}), "
                   f"h: {self.last.heuristic}, fn: {self.last.fn}, "
                   f"gn: {self.last.gn}]")
 
@@ -49,7 +49,7 @@ class State:
                 state_instance.set_fn()
                 state_instance.last = self
                 new_state_set.add(state_instance)
-
+        
         return list(new_state_set)
 
 

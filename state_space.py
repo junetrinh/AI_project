@@ -19,8 +19,9 @@ class State_space:
 
     def add_states(self, next_states):
         for s in next_states:
+
             self.state_list.add(s.fn, s)
-        print("--")
+        
         
 
 
@@ -44,16 +45,14 @@ class State_space:
 
     def a_star_search(self):
         board_label = 0
-
+        print_board(self.board.size, self.board.f_board)
         expanding_state = self.find_best_a_star()
         expanding_state.print_state_info()
         
         while expanding_state and not expanding_state.goal_test(self.goal_state):
-            print("a")
+
             successors_state = expanding_state.explore_next_state_a_star(self.board, self.goal_state)
-            print("b")
             self.add_states(successors_state)
-            print("c")
             # if (self.state_list.get_len() > 9999):
             #     print("out of mem")
             #     return 
@@ -68,7 +67,7 @@ class State_space:
             # self.board.f_board[(self.goal_state.r, self.goal_state.q)] = "null"
 
             expanding_state = self.find_best_a_star()
-            expanding_state.print_state_info()
+            # expanding_state.print_state_info()
 
         self.path.append(self.goal_state)
         self.goal_state.last = expanding_state
