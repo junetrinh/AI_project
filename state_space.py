@@ -30,7 +30,7 @@ class State_space:
             initial_board[(self._start_state.r, self._start_state.q)] = "I"
             initial_board[(self._goal_state.r, self._goal_state.q)] = "G"
             print_board(self._board.size, initial_board)
-
+    
     # Private method
     def _find_best(self):
         node = self._open_list.pop()
@@ -75,7 +75,10 @@ class State_space:
         '''
             perform a* search with reopen
         '''
+        # the following variable is for debuging
         board_label = 0
+        solutionBoard = filled_board(self._board.b_info, self._board.size)
+
         expanding_state = self._find_best()
         while expanding_state and not expanding_state.goal_test(self._goal_state):
             self._board.f_board[(expanding_state.r, expanding_state.q)] = "x"
@@ -85,20 +88,22 @@ class State_space:
             self._path.append(expanding_state)
             expanding_state = self._find_best()
         
-        # add the goal to the close list to complete the path
-        self._path.append(self._goal_state)
-        self._goal_state.last = expanding_state
+        # add the goal to the close list to complete the path if any
+        if expanding_state:
+            self._path.append(self._goal_state)
+            self._goal_state.last = expanding_state
 
-        solutionBoard = filled_board(self._board.b_info, self._board.size)
+            valid_path = self._back_track()
+            for i in valid_path[::-1]:
+                solutionBoard[(i.r, i.q)] = board_label
+                board_label += 1
 
-        valid_path = self._back_track()
-        for i in valid_path[::-1]:
-            solutionBoard[(i.r, i.q)] = board_label
-            board_label += 1
-
-            i.print_state_valid()
-
-        # display the solution board
+                i.print_state_valid()
+        else:
+            print("No solution")
+            return
+            
+        # display the solution board -> only when the flag indicate so
         if self._debug_flag:
             solutionBoard[(self._goal_state.r, self._goal_state.q)] = "G"
             print("__SOLUTION:")

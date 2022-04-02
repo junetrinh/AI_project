@@ -88,7 +88,10 @@ class priority_queue:
             
 
     def add(self, key_val, item):
-
+        """
+            #param: key_val: the value where the item will be sorted by'
+                    item: any object, primitive 
+        """
         HIGHEST_PRIORITY = 0
         OUT_OF_ORDER_I = 0
 
