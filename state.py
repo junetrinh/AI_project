@@ -1,4 +1,5 @@
 from board import *
+from util import *
 class State:
 
     def __init__(self, r, q):
@@ -9,7 +10,7 @@ class State:
         self.heuristic = None
         self.gn = 0
         self.fn = None
-        self.last = None
+        self.parent = None
 
     def goal_test(self, goal_state):
         if self.is_equal(goal_state):
@@ -26,10 +27,10 @@ class State:
         print(f"[({self.r}, {self.q}), "
                   f"h: {self.heuristic}, fn: {self.fn}, "
                   f"gn: {self.gn}]")
-        if self.last:
-            print(f"\tParent:[({self.last.r}, {self.last.q}), "
-                  f"h: {self.last.heuristic}, fn: {self.last.fn}, "
-                  f"gn: {self.last.gn}]")
+        if self.parent:
+            print(f"\tParent:[({self.parent.r}, {self.parent.q}), "
+                  f"h: {self.parent.heuristic}, fn: {self.parent.fn}, "
+                  f"gn: {self.parent.gn}]")
 
 
     def explore_next_state_a_star(self, board, goal_state):
@@ -41,30 +42,28 @@ class State:
 
             # generate state for each instance of state result from an action of {move in q, move in r, move diagonal}
             for state_instance in [new_state_r, new_state_q, new_state_rq]:
-                if( not (check_valid_state(state_instance, board)
-                    and check_no_block(state_instance, board))
-                    and not check_close_list(board, state_instance)):
+                if  ( not check_valid_state(state_instance, board)
+                    and 
+                        not check_close_list(board, state_instance)):
                     continue
 
                 state_instance.set_heuristic(goal_state)
                 state_instance.update_gn(self)
                 state_instance.set_fn()
-                state_instance.last = self
+                state_instance.parent = self
                 new_state_set.add(state_instance)
         
         return list(new_state_set)
 
 
-
-
     def print_state_valid(self):
-        print(f"({self.r},{self.q})")
+        print_coordinate(self.r, self.q)
 
     def set_fn(self):
         self.fn = self.heuristic + self.gn
 
-    def update_gn(self, last_state):
-        self.gn = last_state.gn + 1
+    def update_gn(self, parent_state):
+        self.gn = parent_state.gn + 1
 
 
 def z_axes(state):
@@ -77,14 +76,11 @@ def find_heuristic(state, goal_state):
     z_dis = state.z - goal_state.z
     return int((abs(r_dis) + abs(q_dis) + abs(z_dis)) / 2)
 
-# this is unessary, the search can be replace with a straight logic statement
 def check_valid_state(state, board):
+    """
+        a valid state is one which in the board and the move is not go to coordinate that are occupied
+    """
     # if (state.r, state.q) in board.valid_axes:
         # return True
     # return False
-    return (state.r >= 0 and state.r <board.size) and (state.q >= 0 and state.q <board.size) and 
-
-def check_no_block(state, board):
-    if board.f_board[(state.r, state.q)] == "null":
-        return True
-    return False
+    return (state.r >= 0 and state.r <board.size) and (state.q >= 0 and state.q <board.size) and  (board.f_board[(state.r, state.q)] == "null")

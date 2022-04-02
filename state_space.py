@@ -37,10 +37,8 @@ class State_space:
         
         if node:
             node = node[1]
-
         return node
     
-
 
     def _back_track(self):
         '''
@@ -48,8 +46,8 @@ class State_space:
         '''
         back_track = []
         last_state = self._path[-1]
-        while last_state.last:
-            last_state = last_state.last
+        while last_state.parent:
+            last_state = last_state.parent
             back_track.append(last_state)
         return back_track
 
@@ -68,7 +66,6 @@ class State_space:
     def add_states(self, next_states):
         for s in next_states:
             self._open_list.add(s.fn, s)
-
 
 
     def a_star_search(self):
@@ -91,7 +88,7 @@ class State_space:
         # add the goal to the close list to complete the path if any
         if expanding_state:
             self._path.append(self._goal_state)
-            self._goal_state.last = expanding_state
+            self._goal_state.parent = expanding_state
 
             valid_path = self._back_track()
             for i in valid_path[::-1]:

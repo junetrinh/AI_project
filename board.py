@@ -23,15 +23,7 @@ def shape_board(board_info):
     return shaped_board
 
 
-def check_valid_axes(r, q, n):
-
-    if (r, q) in valid_axes(n):
-        return True
-    return False
-
-
 def valid_axes(n):
-
     axes_set = set()
     for i in range(0, n):
         for j in range(0, n):

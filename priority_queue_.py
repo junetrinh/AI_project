@@ -1,6 +1,3 @@
-# if we want to get more information, change this flag to true
-print_flag = False
-
 class priority_queue:
     
     def __init__(self):
@@ -44,7 +41,14 @@ class priority_queue:
         # after exit the loop the position of examined node should be correct.
 
 
-    def _find_highest_priority_child_i(self, item_i):
+    def _find_highest_priority_child_i(self, item_i=0):
+        """
+            From the heap (binary tree structure), find the position of the child that has highest priority (lowest key value)
+
+            Arguments:
+            
+            int -- Index of the parent who look for their best child.
+        """
         left_i = self._get_left_child_i(item_i)
         right_i = self._get_right_child_i(item_i)
         # outter most leaf
@@ -78,19 +82,26 @@ class priority_queue:
         while item_i < self.last_i and highest_p_child > -1 and self.heap[highest_p_child][SORT_KEY] < self.heap[item_i][SORT_KEY]:
             # perform swap
             dummy_node = self.heap[item_i]
-            if print_flag:
-                print("Swap: " + str(dummy_node) + " <-> " + str(self.heap[highest_p_child]) + " || last:" + str(self.last_i))
             self.heap[item_i] = self.heap[highest_p_child]
             self.heap[highest_p_child] = dummy_node
 
             item_i = highest_p_child
             highest_p_child = self._find_highest_priority_child_i(item_i)
-            
+    
+    
+    def get_len(self):
+        """
+            OOP: a wrapper around the len(self.heap) in order to preserve the encapsulate paradigm
+        """
+        return self.last_i + 1
 
     def add(self, key_val, item):
         """
-            #param: key_val: the value where the item will be sorted by'
-                    item: any object, primitive 
+            Add an item with a specify sorting value, the item will be in its correct place according to that value
+            Arguments: 
+            
+            int -- the value where the item will be sorted by'
+            object -- any object or primitive 
         """
         HIGHEST_PRIORITY = 0
         OUT_OF_ORDER_I = 0
@@ -101,10 +112,11 @@ class priority_queue:
         # bring the item to its correct position
         self._up_heap()
 
-    def get_len(self):
-        return self.last_i
 
     def pop(self):
+        """
+            Remove and return the highest priority item in the priority queue
+        """
         HIGHEST_PRIORITY = 0
         OUT_OF_ORDER_I = 0
 
@@ -126,17 +138,8 @@ class priority_queue:
         # remove and fixing the heap by perform a down heap
         self.heap.pop(self.last_i)
         self.last_i -= 1
-        if print_flag:
-            print("\n\nBefore fix:----------------------------------------------------------------")
-            for (i, item) in self.heap:
-                print("(" + str(i) + "," + item + ")")
-            print("-- --")
         self._down_heap(OUT_OF_ORDER_I)
-        if print_flag:
-            print("After fix:")
-            for (i, item) in self.heap:
-                print("(" + str(i) + "," + item + ")")
-            print("-- ------------------------------------------------------ \n")
+
         return return_node
 
     def clear(self):
@@ -149,17 +152,3 @@ class priority_queue:
         return -1
     
         
-def print_node(node):
-    print("(" + str(node[0]) + "," +  node[1] + ")")
-
-
-# q = priority_queue()
-
-# q.add(0, "a")
-# q.add(100, "b")
-# q.add(2, "d")
-# q.add(5, "d")
-# q.add(8, "e")
-
-# while q.get_len() > -1:
-#     print_node(q.pop())
