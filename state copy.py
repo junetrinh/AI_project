@@ -77,12 +77,10 @@ def find_heuristic(state, goal_state):
     z_dis = state.z - goal_state.z
     return int((abs(r_dis) + abs(q_dis) + abs(z_dis)) / 2)
 
-# this is unessary, the search can be replace with a straight logic statement
 def check_valid_state(state, board):
-    # if (state.r, state.q) in board.valid_axes:
-        # return True
-    # return False
-    return (state.r >= 0 and state.r <board.size) and (state.q >= 0 and state.q <board.size) and 
+    if (state.r, state.q) in board.valid_axes:
+        return True
+    return False
 
 def check_no_block(state, board):
     if board.f_board[(state.r, state.q)] == "null":

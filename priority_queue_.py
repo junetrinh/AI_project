@@ -104,7 +104,10 @@ class priority_queue:
     def pop(self):
         HIGHEST_PRIORITY = 0
         OUT_OF_ORDER_I = 0
-        
+
+        if(self.last_i == -1):
+            return
+            
         if(self.last_i == 0):
             return_node = self.heap[HIGHEST_PRIORITY]
             self.last_i = -1

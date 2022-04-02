@@ -1,107 +1,106 @@
+from priority_queue_ import priority_queue
 from util import *
 from board import *
-from priority_queue_ import *
 
 class State_space:
 
-    def __init__(self, start_state, board, goal_state):
-        start_state.set_heuristic(goal_state)
-        start_state.set_fn()
 
-        self.state_list = priority_queue()
-        self.state_list.add(0, start_state)
-        # self.state_list = [start_state]
-        self.board = board
-        self.goal_state = goal_state
-        self.path = []
+    def __init__(self, start_state, board, goal_state, debug_flag = False):
+        '''
+        # param: ...
+            debug_flag: once set to 'True', the state_space will print further STDOUT value
+        '''
+        self._debug_flag = debug_flag
 
+        self._path = []
+        self._open_list = priority_queue()
+        self._start_state = start_state
+        self._goal_state = goal_state
+        self._board = board
+
+        # config the key state value
+        self._start_state.set_heuristic(self._goal_state)
+        self._start_state.set_fn()
+
+        # add the starting node to the open list
+        self._open_list.add(0, self._start_state)
+
+        if(self._debug_flag):
+            initial_board = filled_board(self._board.b_info, self._board.size) 
+            initial_board[(self._start_state.r, self._start_state.q)] = "I"
+            initial_board[(self._goal_state.r, self._goal_state.q)] = "G"
+            print_board(self._board.size, initial_board)
+
+    # Private method
+    def _find_best(self):
+        node = self._open_list.pop()
+        
+        if node:
+            node = node[1]
+
+        return node
     
 
-    def add_states(self, next_states):
-        for s in next_states:
 
-            self.state_list.add(s.fn, s)
-        
-        
-
-
-    def print_state_space(self):
-        for i in self.state_list:
-            i.print_state_info()
-
-
-    def print_path(self):
-        for i in self.path:
-            i.print_state_valid()
-
-    def back_tracking(self):
+    def _back_track(self):
+        '''
+            retrieve the path that link backward from goal to start_state.
+        '''
         back_track = []
-        last_state = self.path[-1]
+        last_state = self._path[-1]
         while last_state.last:
             last_state = last_state.last
             back_track.append(last_state)
         return back_track
 
 
+
+    # Public method
+    def set_debug_flag(bool_):
+        '''
+            indicate that we want futher info for debuging.
+            #param: bool - wherether we want to turn the flag on or off
+        '''
+        self._debug_flag = bool_
+
+
+
+    def add_states(self, next_states):
+        for s in next_states:
+            self._open_list.add(s.fn, s)
+
+
+
     def a_star_search(self):
+        '''
+            perform a* search with reopen
+        '''
         board_label = 0
-        print_board(self.board.size, self.board.f_board)
-        expanding_state = self.find_best_a_star()
-        expanding_state.print_state_info()
+        expanding_state = self._find_best()
+        while expanding_state and not expanding_state.goal_test(self._goal_state):
+            self._board.f_board[(expanding_state.r, expanding_state.q)] = "x"
+            successor_states = expanding_state.explore_next_state_a_star(self._board, self._goal_state)
+            self.add_states(successor_states)
+
+            self._path.append(expanding_state)
+            expanding_state = self._find_best()
         
-        while expanding_state and not expanding_state.goal_test(self.goal_state):
+        # add the goal to the close list to complete the path
+        self._path.append(self._goal_state)
+        self._goal_state.last = expanding_state
 
-            successors_state = expanding_state.explore_next_state_a_star(self.board, self.goal_state)
-            self.add_states(successors_state)
-            # if (self.state_list.get_len() > 9999):
-            #     print("out of mem")
-            #     return 
-            self.path.append(expanding_state)
-           
-            # draw board
-            # print("\n\n\n----DRAW BOARD ----")
-            # self.board.f_board[(expanding_state.r, expanding_state.q)] = str(board_label)
-            # board_label += 1
-            # self.board.f_board[(self.goal_state.r, self.goal_state.q)] = "G"
-            # print_board(self.board.size, self.board.f_board)
-            # self.board.f_board[(self.goal_state.r, self.goal_state.q)] = "null"
+        solutionBoard = filled_board(self._board.b_info, self._board.size)
 
-            expanding_state = self.find_best_a_star()
-            # expanding_state.print_state_info()
-
-        self.path.append(self.goal_state)
-        self.goal_state.last = expanding_state
-
-        valid_path = self.back_tracking()
-        print(len(valid_path))
-        solutionBoard = filled_board(self.board.b_info, self.board.size)
-        board_label = 0
-
+        valid_path = self._back_track()
         for i in valid_path[::-1]:
             solutionBoard[(i.r, i.q)] = board_label
             board_label += 1
 
             i.print_state_valid()
 
-
-        solutionBoard[(self.goal_state.r, self.goal_state.q)] = "G"
-        print("__SOLUTION:")
-        print_board(self.board.size, solutionBoard)
-
-    def check_in_next_list(self, state):
-        for i in self.state_list:
-            if state.is_equal(i):
-                return state
-        return False
-
-
-    def find_best_a_star(self):
-        node = self.state_list.pop()
-        if node:
-            node = node[1]
-
-        return node
-
-    def print_state_list(self):
-        for i in self.state_list:
-            i.print_state_info()
+        # display the solution board
+        if self._debug_flag:
+            solutionBoard[(self._goal_state.r, self._goal_state.q)] = "G"
+            print("__SOLUTION:")
+            print_board(self._board.size, solutionBoard)
+            solutionBoard[(self._goal_state.r, self._goal_state.q)] = "null"

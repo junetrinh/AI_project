@@ -15,7 +15,6 @@ from state import *
 def main():
     try:
         with open(sys.argv[1]) as file:
-
             # deal with input
             data = json.load(file)  # treated as a dictionary
             n = data["n"]
@@ -24,7 +23,8 @@ def main():
             board_info = shape_board(data["board"]) # call shape board into wanted format
             board = Board(n,board_info)
 
-            state_space = State_space(start_state, board, goal_state)
+            state_space = State_space(start_state, board, goal_state, True)
+            print("no Error till search")
             state_space.a_star_search()
 
     except IndexError:
