@@ -23,18 +23,12 @@ def main():
             board_info = shape_board(data["board"]) # call shape board into wanted format
             board = Board(n,board_info)
 
-            state_space = State_space(start_state, board, goal_state, True)
-            print("no Error till search")
+            state_space = State_space(start_state, board, goal_state)
             state_space.a_star_search()
 
     except IndexError:
-        print("usage: python3 -m search path/to/input.json", file=sys.stderr)
+        print("usage: python3 -m search path/to/input.json")
         sys.exit(1)
 
-    # TODO:
-    # Find and print a solution to the board configuration described
-    # by `data`.
-    # Why not start by trying to print this configuration out using the
-    # `print_board` helper function? (See the `util.py` source code for
-    # usage information).
+
 

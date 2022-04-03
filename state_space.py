@@ -91,13 +91,14 @@ class State_space:
             self._goal_state.parent = expanding_state
 
             valid_path = self._back_track()
+            print(len(valid_path))
             for i in valid_path[::-1]:
                 solutionBoard[(i.r, i.q)] = board_label
                 board_label += 1
 
                 i.print_state_valid()
         else:
-            print("No solution")
+            print("0")
             return
             
         # display the solution board -> only when the flag indicate so
