@@ -23,11 +23,11 @@ def main():
             board_info = shape_board(data["board"]) # call shape board into wanted format
             board = Board(n,board_info)
 
-            state_space = State_space(start_state, board, goal_state)
+            state_space = State_space(start_state, board, goal_state, False)
             state_space.a_star_search()
 
     except IndexError:
-        print("usage: python3 -m search path/to/input.json")
+        print("usage: python3 -m search path/to/input.json", file=sys.stderr)
         sys.exit(1)
 
 

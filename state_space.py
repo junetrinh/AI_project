@@ -10,7 +10,7 @@ class State_space:
         # param: ...
             debug_flag: once set to 'True', the state_space will print further STDOUT value
         '''
-        self._debug_flag = debug_flag
+        self._debug_flag = False #debug_flag <- prevent printing un wanted item
 
         self._path = []
         self._open_list = priority_queue()
