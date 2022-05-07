@@ -1,15 +1,15 @@
 
 class Board:
 
-    def __init__(self, size, board_info, debug_flag = False):
+    def __init__(self, size, debug_flag = False):
         self.size = size
         self.valid_axes = valid_axes(size)
-        self.b_info = board_info
+        # self.b_info = board_info
         self.f_board = filled_board(board_info, size)
         self._debug_flag = debug_flag
 
-    def print_board_info(self):
-        print(self.b_info)
+    # def print_board_info(self):
+    #     print(self.b_info)
 
     def print_filled_board(self):
         print(self.f_board)
@@ -43,12 +43,15 @@ def check_close_list(board, state):
     return False
 
 def filled_board(board_info, n):
+    """
+        Does not need the board info any more since the board is should be recycle 
+    """
     v_axes = valid_axes(n)
-    s_board = board_info
+    # s_board = board_info
     f_board = {}
     for i in v_axes:
         f_board[i] = "null"  # set all the axes into null
 
-    for i in s_board.keys():
-        f_board[i] = s_board[i]
+    # for i in s_board.keys():
+    #     f_board[i] = s_board[i]
     return f_board

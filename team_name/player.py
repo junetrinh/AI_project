@@ -1,3 +1,5 @@
+from state_space import *
+from state import *
 class Player:
 
     
@@ -15,9 +17,11 @@ class Player:
             n -- Integer that is the size of the board being use
         """
         self.type = player
-        self.board_size = n
+        self._board_size = n
 
         # internal state of the game
+        self._board = Board(self.board_size)
+        self._state_space = State_space()
 
     """
             Called at the beginning of your turn. Based on the current state
