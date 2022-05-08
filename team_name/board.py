@@ -8,11 +8,10 @@ class Board:
         self.f_board, self._empty_coord = filled_board(board_info, size)
         self._debug_flag = debug_flag
 
-    # def print_board_info(self):
-    #     print(self.b_info)
 
     def print_filled_board(self):
         print(self.f_board)
+
 
     def place(self, player, coordinate):
         label = "r"
@@ -22,6 +21,9 @@ class Board:
         if(self._empty_coord[coordinate]):
             self._empty_coord.remove(coordinate)
             self.f_board[coordinate] = label
+            # update the board to ensure all capture occur
+            self.update(coordinate, player)
+
 
     def update(self, coord, player):
         """
@@ -64,7 +66,10 @@ class Board:
 
                 # check if both common adj token is of player type, remove the two token
                 for token in common_adj:
-                    if(self.f_board[token] == oponent or self.f_board[token] == "null"):
+                    try:
+                        if(self.f_board[token] == oponent or self.f_board[token] == "null"):
+                            capture_flag = False
+                    except KeyError:
                         capture_flag = False
                 
                 if(capture_flag):
