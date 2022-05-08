@@ -25,11 +25,10 @@ def main():
             print_board(board.size, board.f_board)
             state = State(board, "blue")
             res= state.goal_test("blue")
-
-            if(not res[0]):
-                print(state.evaluate(res[1], "blue"))
-                board.update((2, 2), "red")
-            print_board(board.size, board.f_board)
+            print("here")
+            minimax = state.result_action("red")
+            print("here")
+            print(minimax)
             # state_space = State_space(start_state, board, goal_state, False)
             # state_space.a_star_search()
 

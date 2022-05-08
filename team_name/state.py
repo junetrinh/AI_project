@@ -1,5 +1,8 @@
+from asyncio.windows_events import NULL
+from cmath import inf
 from board import *
 from util import *
+from random import *
 
 debugFlag = False
 
@@ -153,18 +156,34 @@ class State:
         goal_coord = (leaf_token[0], self._board.size - 1)
         if(player == "blue"):
             goal_coord = (self._board.size - 1, leaf_token[1])
-        f1 = self._board.size - find_manhattan_dist(leaf_token, (leaf_token[0], self._board.size - 1))
+        f1 = self._board.size - find_manhattan_dist(leaf_token, (leaf_token[0], self._board.size - 1)) + random() * 10
 
 
         #there are more feature introduce later but for now evaluate only usine the manhatan
         return f1
 
 
-    def result_action(self, board, player):
+    def result_action(self, player):
         """
             obtain all possible action
                 keep track of state that result in highest: MAX
                 keep track state that is lowest: MIN
         """
         # for empty_coord in board._empty_coord:
-        return
+        max = ( player, 0)
+        min = (player, inf)
+        print("1")
+        cached_set = set(self._board._empty_coord)
+        print("2")
+        for coord in cached_set:
+            if(self._board.place(player, coord)):
+                res = self.goal_test(player)
+
+                if(not res[0]):
+                    val = self.evaluate(res[1], player)
+
+                    if(val > max[1]):
+                        max = (res[1], val) 
+                    if(val < min[1]):
+                        min =(res[1], val)
+        return (min, max)

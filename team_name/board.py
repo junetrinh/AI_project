@@ -14,22 +14,42 @@ class Board:
 
 
     def place(self, player, coordinate):
+        """
+            update the board info that if possible
+
+            Arguments:
+
+                player - String either "red" or "blue"
+                coordinate - Tuple (r, q) where the potential move could go
+            
+            Return:
+                Bool - indicate if the move is valid
+        """
         label = "r"
         if(player == 'blue'):
             label = 'b'
         
-        if(self._empty_coord[coordinate]):
+        if(coordinate in self._empty_coord):
             self._empty_coord.remove(coordinate)
             self.f_board[coordinate] = label
             # update the board to ensure all capture occur
             self.update(coordinate, player)
+            return True 
+        
+        return False
 
 
     def update(self, coord, player):
         """
             check if a move into coordicate cause any capture
         """
-        # from the adjacent of this move, find 2 hex belong to oponent that are adjacent
+        i = 0
+        next_i = 1
+        oponent = "r"
+        if(player == "red"):
+            oponent = "b"
+        
+        # Find all adjcent coordinate
         adj_list = []
         adj_list.append((coord[0] + 1, coord[1] - 1))
         adj_list.append((coord[0] + 1, coord[1]))
@@ -38,48 +58,49 @@ class Board:
         adj_list.append((coord[0] - 1, coord[1]))
         adj_list.append((coord[0], coord[1] - 1))
 
-        #for every consecutive index adj_list item check if they r same color
-        i = 0
-        next_i = 1
-        oponent = "r"
-        if(player == "red"):
-            oponent = "b"
-        for _ in range(6):
-            
-            if((self.f_board[adj_list[i]] == self.f_board[adj_list[next_i]]) and self.f_board[adj_list[next_i]] == oponent):
-                # find the common adj coord of the two
-                capture_flag = True
-                common_adj = []
-                all_adj = set()
-                for token in [adj_list[i], adj_list[next_i]]:
-                    
-                    for adj_coord in [(token[0] + 1, token[1] - 1), (token[0] + 1, token[1]), (token[0], token[1] + 1),
-                            (token[0] - 1, token[1] + 1), (token[0] - 1, token[1]), (token[0], token[1] - 1)]:
-                        
-                        if( (adj_coord not in all_adj) and (adj_coord != adj_list[i] and adj_coord != adj_list[next_i])):
-                            all_adj.add(adj_coord)
-                        else:
-                            common_adj.append(adj_coord)
-                    
-                common_adj.remove(adj_list[i])
-                common_adj.remove(adj_list[next_i])
+        
+        # if the coordinate data is differ from expectation, do nothing
+        if(self.f_board[coord] == oponent or self.f_board[coord] == "null"):
+            #do nothing
+            return
 
-                # check if both common adj token is of player type, remove the two token
-                for token in common_adj:
-                    try:
+        # for each pair of adjacent hex from the coord, check if there are both belong to player's oponent
+        for _ in range(6):
+            try:
+                if((self.f_board[adj_list[i]] == self.f_board[adj_list[next_i]]) and self.f_board[adj_list[next_i]] == oponent):
+                    # find the common adj coord of the two
+                    capture_flag = True
+                    common_adj = []
+                    all_adj = set()
+                    # try to obtain the 2 hex that would be form a diamond with this 2 adjacent hex
+                    for token in [adj_list[i], adj_list[next_i]]:
+                        
+                        for adj_coord in [(token[0] + 1, token[1] - 1), (token[0] + 1, token[1]), (token[0], token[1] + 1),
+                                (token[0] - 1, token[1] + 1), (token[0] - 1, token[1]), (token[0], token[1] - 1)]:
+                            
+                            if( (adj_coord not in all_adj) and (adj_coord != adj_list[i] and adj_coord != adj_list[next_i])):
+                                all_adj.add(adj_coord)
+                            else:
+                                common_adj.append(adj_coord)
+                        
+                    common_adj.remove(adj_list[i])
+                    common_adj.remove(adj_list[next_i])
+
+                    # check if both of that hex belong to player
+                    for token in common_adj:
+                       
                         if(self.f_board[token] == oponent or self.f_board[token] == "null"):
                             capture_flag = False
-                    except KeyError:
-                        capture_flag = False
-                
-                if(capture_flag):
-                    
-                    self.f_board[adj_list[next_i]] = "null"
-                    self.f_board[adj_list[i]] = "null"
+                        
+                    # if it is , player will be able to capture their oponent
+                    if(capture_flag):
+                        self.f_board[adj_list[next_i]] = "null"
+                        self.f_board[adj_list[i]] = "null"
 
-                    self._empty_coord.add(adj_list[next_i])
-                    self._empty_coord.add(adj_list[i])
-            
+                        self._empty_coord.add(adj_list[next_i])
+                        self._empty_coord.add(adj_list[i])
+            except KeyError:
+                i = next_i 
             i = next_i
             next_i = (next_i + 1) % 6
                     
