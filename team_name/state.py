@@ -106,32 +106,30 @@ class State:
 
         if(debugFlag):
             print("==========Goal check:level dict=====")
+            print("Board_size:" + str((self._board.size -1)))
             for level in token_dict.keys():
                 print(str(level) + ":    " + ', '.join([str(elem) for elem in token_dict[level]]))
             
             print("=====================================")
-        #if each level, has at least 1 token, we try to connect them
-        #red
-        
+        #if each level, has at least 1 token, we try to connect them  
         close_list = []
         queue = []
         # this is a BFS 
         # add all root token to the queue
         for token in token_dict[0]:
             queue.append((token, 0))
-        if debugFlag:
-            print("Board_size:" + str((self._board.size -1)))
+            
         while(len(queue) > 0):            
             # pop the top of the queue
             examined_token = queue.pop(0)
-            if debugFlag:
-                print(examined_token)
-            #adjacent within the same level
+            #we try to either link side-way (same level) or forward linking
             for potential_level in [0, 1]:
                 try:
                     for next_token in token_dict[examined_token[1] + potential_level]:
+                    
                         if(check_adjaceny(examined_token[0], next_token) and (not next_token in close_list)):
                             
+                            # reach goal level
                             if(next_token[level_i] == (self._board.size - 1)):
                                 return (True, )
 
@@ -172,13 +170,18 @@ class State:
         # for empty_coord in board._empty_coord:
         max = ( player, 0)
         min = (player, inf)
-        print("1")
+        
+        
         cached_set = set(self._board._empty_coord)
-        print("2")
+        # Try out all possible move (we have only option to place token into empty hex)
         for coord in cached_set:
+            # after action occur, ensure board is upto date: all capture piece are remove
             if(self._board.place(player, coord)):
-                res = self.goal_test(player)
 
+                # check if this reach the goal 
+                res = self.goal_test(player)
+                
+                # evaluate and update our min max value
                 if(not res[0]):
                     val = self.evaluate(res[1], player)
 
