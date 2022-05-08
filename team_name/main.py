@@ -28,6 +28,8 @@ def main():
 
             if(not res[0]):
                 print(state.evaluate(res[1], "blue"))
+                board.update((2, 2), "red")
+            print_board(board.size, board.f_board)
             # state_space = State_space(start_state, board, goal_state, False)
             # state_space.a_star_search()
 

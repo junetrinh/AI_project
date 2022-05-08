@@ -25,11 +25,10 @@ class Board:
 
     def update(self, coord, player):
         """
-            check if last move cause any capture
+            check if a move into coordicate cause any capture
         """
         # from the adjacent of this move, find 2 hex belong to oponent that are adjacent
         adj_list = []
-        
         adj_list.append((coord[0] + 1, coord[1] - 1))
         adj_list.append((coord[0] + 1, coord[1]))
         adj_list.append((coord[0], coord[1] + 1))
@@ -43,13 +42,44 @@ class Board:
         oponent = "r"
         if(player == "red"):
             oponent = "b"
-        for turn in range(6):
+        for _ in range(6):
+            
             if((self.f_board[adj_list[i]] == self.f_board[adj_list[next_i]]) and self.f_board[adj_list[next_i]] == oponent):
                 # find the common adj coord of the two
+                capture_flag = True
                 common_adj = []
-                all_adj = []
+                all_adj = set()
                 for token in [adj_list[i], adj_list[next_i]]:
-        return
+                    
+                    for adj_coord in [(token[0] + 1, token[1] - 1), (token[0] + 1, token[1]), (token[0], token[1] + 1),
+                            (token[0] - 1, token[1] + 1), (token[0] - 1, token[1]), (token[0], token[1] - 1)]:
+                        
+                        if( (adj_coord not in all_adj) and (adj_coord != adj_list[i] and adj_coord != adj_list[next_i])):
+                            all_adj.add(adj_coord)
+                        else:
+                            common_adj.append(adj_coord)
+                    
+                common_adj.remove(adj_list[i])
+                common_adj.remove(adj_list[next_i])
+
+                # check if both common adj token is of player type, remove the two token
+                for token in common_adj:
+                    if(self.f_board[token] == oponent or self.f_board[token] == "null"):
+                        capture_flag = False
+                
+                if(capture_flag):
+                    
+                    self.f_board[adj_list[next_i]] = "null"
+                    self.f_board[adj_list[i]] = "null"
+
+                    self._empty_coord.add(adj_list[next_i])
+                    self._empty_coord.add(adj_list[i])
+            
+            i = next_i
+            next_i = (next_i + 1) % 6
+                    
+
+        
 
 def shape_board(board_info):
 
