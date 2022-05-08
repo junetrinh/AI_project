@@ -1,11 +1,11 @@
 
 class Board:
 
-    def __init__(self, size, debug_flag = False):
+    def __init__(self, size, board_info, debug_flag = False):
         self.size = size
         self.valid_axes = valid_axes(size)
-        # self.b_info = board_info
-        self.f_board = filled_board(board_info, size)
+        self.b_info = board_info
+        self.f_board, self._empty_coord = filled_board(board_info, size)
         self._debug_flag = debug_flag
 
     # def print_board_info(self):
@@ -14,6 +14,42 @@ class Board:
     def print_filled_board(self):
         print(self.f_board)
 
+    def place(self, player, coordinate):
+        label = "r"
+        if(player == 'blue'):
+            label = 'b'
+        
+        if(self._empty_coord[coordinate]):
+            self._empty_coord.remove(coordinate)
+            self.f_board[coordinate] = label
+
+    def update(self, coord, player):
+        """
+            check if last move cause any capture
+        """
+        # from the adjacent of this move, find 2 hex belong to oponent that are adjacent
+        adj_list = []
+        
+        adj_list.append((coord[0] + 1, coord[1] - 1))
+        adj_list.append((coord[0] + 1, coord[1]))
+        adj_list.append((coord[0], coord[1] + 1))
+        adj_list.append((coord[0] - 1, coord[1] + 1)) 
+        adj_list.append((coord[0] - 1, coord[1]))
+        adj_list.append((coord[0], coord[1] - 1))
+
+        #for every consecutive index adj_list item check if they r same color
+        i = 0
+        next_i = 1
+        oponent = "r"
+        if(player == "red"):
+            oponent = "b"
+        for turn in range(6):
+            if((self.f_board[adj_list[i]] == self.f_board[adj_list[next_i]]) and self.f_board[adj_list[next_i]] == oponent):
+                # find the common adj coord of the two
+                common_adj = []
+                all_adj = []
+                for token in [adj_list[i], adj_list[next_i]]:
+        return
 
 def shape_board(board_info):
 
@@ -47,11 +83,14 @@ def filled_board(board_info, n):
         Does not need the board info any more since the board is should be recycle 
     """
     v_axes = valid_axes(n)
-    # s_board = board_info
+    s_board = board_info
+    empty_coord = set()
     f_board = {}
     for i in v_axes:
         f_board[i] = "null"  # set all the axes into null
+        empty_coord.add(i)
 
-    # for i in s_board.keys():
-    #     f_board[i] = s_board[i]
-    return f_board
+    for i in s_board.keys():
+        f_board[i] = s_board[i]
+        empty_coord.remove(i)
+    return f_board, empty_coord

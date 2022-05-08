@@ -22,9 +22,14 @@ def main():
             start_state = State(data["start"][0], data["start"][1])
             board_info = shape_board(data["board"]) # call shape board into wanted format
             board = Board(n,board_info)
+            print_board(board.size, board.f_board)
+            state = State(board, "blue")
+            res= state.goal_test("blue")
 
-            state_space = State_space(start_state, board, goal_state, False)
-            state_space.a_star_search()
+            if(not res[0]):
+                print(state.evaluate(res[1], "blue"))
+            # state_space = State_space(start_state, board, goal_state, False)
+            # state_space.a_star_search()
 
     except IndexError:
         print("usage: python3 -m search path/to/input.json", file=sys.stderr)
@@ -32,3 +37,4 @@ def main():
 
 
 
+main()
