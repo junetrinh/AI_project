@@ -1,5 +1,5 @@
-from state_space import *
-from state import *
+from team_name.state_space import *
+from team_name.state import *
 class Player:
 
     
@@ -20,8 +20,8 @@ class Player:
         self._board_size = n
 
         # internal state of the game
-        self._board = Board(self.board_size)
-        self._state_space = State_space()
+        self._board = Board(self._board_size)
+        self._state_space = State_space(State(self._board, player), player)
 
     """
             Called at the beginning of your turn. Based on the current state
@@ -30,8 +30,9 @@ class Player:
             ("PLACE", r, q) - the capture + placing token on board
     """
     def action(self):
-
-        return 
+        move = self._state_space.decide()
+        
+        return ("PLACE", move[0], move[1])
 
     
     """
@@ -49,5 +50,6 @@ class Player:
             action -- the action of either player label by the "player" attribute
     """
     def turn(self, player, action):
-
+        self._state_space.update(player, action)
+        
         return

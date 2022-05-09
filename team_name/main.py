@@ -11,6 +11,8 @@ import sys
 import json
 from state_space import *
 from state import *
+from state_space import *
+import copy
 
 def main():
     try:
@@ -18,22 +20,19 @@ def main():
             # deal with input
             data = json.load(file)  # treated as a dictionary
             n = data["n"]
-            goal_state = State(data["goal"][0], data["goal"][1])
-            start_state = State(data["start"][0], data["start"][1])
             board_info = shape_board(data["board"]) # call shape board into wanted format
             board = Board(n,board_info)
+            
             print_board(board.size, board.f_board)
             state = State(board, "blue")
-            res= state.goal_test("blue")
-            print("here")
-            minimax = state.result_action("red")
-            print("here")
-            print(minimax)
+            space = State_space(state, "blue")
+            print(space.decide())
             # state_space = State_space(start_state, board, goal_state, False)
             # state_space.a_star_search()
 
-    except IndexError:
+    except KeyError:
         print("usage: python3 -m search path/to/input.json", file=sys.stderr)
+        print("index error")
         sys.exit(1)
 
 

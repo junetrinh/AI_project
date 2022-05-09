@@ -1,7 +1,6 @@
-
 class Board:
 
-    def __init__(self, size, board_info, debug_flag = False):
+    def __init__(self, size, board_info = {}, debug_flag = False):
         self.size = size
         self.valid_axes = valid_axes(size)
         self.b_info = board_info
@@ -16,9 +15,7 @@ class Board:
     def place(self, player, coordinate):
         """
             update the board info that if possible
-
             Arguments:
-
                 player - String either "red" or "blue"
                 coordinate - Tuple (r, q) where the potential move could go
             
@@ -105,7 +102,12 @@ class Board:
             next_i = (next_i + 1) % 6
                     
 
-        
+def valid_axes(n):
+    axes_set = set()
+    for i in range(0, n):
+        for j in range(0, n):
+            axes_set.add((i, j))
+    return axes_set        
 
 def shape_board(board_info):
 
