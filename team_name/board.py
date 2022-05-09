@@ -115,25 +115,6 @@ def shape_board(board_info):
     return shaped_board
 
 
-def valid_axes(n):
-    axes_set = set()
-    for i in range(0, n):
-        for j in range(0, n):
-            axes_set.add((i, j))
-    return axes_set
-
-# we only want to expand unvisit node
-def check_close_list(board, state):
-    try:
-        # if there r none the keyException wil raise and return False
-        if(board.f_board[(state.r, state.q)] == "null"):
-            return True
-    except (KeyError):
-        # just to escape the block
-        if(board._debug_flag):
-            print("Coord: (" + state.r + "," + state.q + ") -> lies outside of the grid" )
-    return False
-
 def filled_board(board_info, n):
     """
         Does not need the board info any more since the board is should be recycle 

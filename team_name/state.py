@@ -52,14 +52,10 @@ def find_manhattan_dist(state, goal_state):
 class State:
 
     def __init__(self, board, player):
-        # self.r = r
-        # self.q = q
-        # self.z = z_axes(self)
-        # self.next_states = None
-        # self.heuristic = None
-        # self.gn = 0
-        # self.fn = None
-        # self.parent = None
+        """
+            i will need to remove the player from state, since state is 
+                belong to both player
+        """
         self._type = player
         self._board = board
         self._parent = None
