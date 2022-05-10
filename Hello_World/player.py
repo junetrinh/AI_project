@@ -37,8 +37,16 @@ class Player:
         valid_move = self._environment.getValidMove()
         # print(valid_move)
         move = valid_move[random.randint(0, len(valid_move) - 1)]
-        if(len(self._environment._taken) == 0 and move == (self._environment.board_size / 2.0, self._environment.board_size / 2.0)):
+        if(len(self._environment._taken) == 0 and
+            # check if move is the centre of board
+            (self._environment.board_size % 2 != 0 and 
+                (move[0] == int(self._environment.board_size /2.0) + 1 
+                    and move[1] == int(self._environment.board_size /2.0) + 1)
+        )):
             move = (2, 1)
+
+        if(len(self._environment._taken.keys()) == 1 and self._type == "blue"):
+            return ('STEAL',)
         return ('PLACE', int(move[0]), int(move[1]))
     
     """
@@ -60,4 +68,6 @@ class Player:
             self._environment.place((action[1], action[2]), player)
         else:
             self._environment.steal()
-        
+    
+
+    

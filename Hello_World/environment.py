@@ -11,8 +11,7 @@ class Environment:
         self.board_size = board_size
         self._taken = dict()
         self._available = set()
-        self._captureCount = 0
-        self._captureMove = []
+        self.latestUpdate = ()
 
         
         for n in range(board_size):
@@ -42,6 +41,7 @@ class Environment:
         self._available.remove(position)
         self._taken[position] = token_label
         self._checkAdjust4Capture(position)
+        self.latestUpdate = (position, token_label)
 
     
     def steal(self):
@@ -50,13 +50,16 @@ class Environment:
         """
         # add the token of player who stole his/her opponent move
         # steal only occur in first move
-        prev_move = self._taken.keys()[0]
-
-        self._available.remove((prev_move[1], prev_move[0]))
-        self._taken[(prev_move[1], prev_move[0])] = "red" if(self._taken[prev_move] == "blue") else "blue"
         
-        self._taken.pop(prev_move)
-        self._available.add(prev_move)
+        prev_move = self.latestUpdate[0]
+        
+        self._taken[(prev_move[1], prev_move[0])] = "red" if(self._taken[prev_move] == "blue") else "blue"
+
+        # if the result of stealing opponent move is @ a different coordinate
+        if(prev_move != (prev_move[1], prev_move[0])):
+            self._available.remove((prev_move[1], prev_move[0]))
+            self._taken.pop(prev_move)
+            self._available.add(prev_move)
 
     
     def inside_bounds(self, coord):
@@ -97,8 +100,6 @@ class Environment:
         for position in captured:
             self._taken.pop(position)
             self._available.add(position)
-            self._captureCount += 1
-            self._captureMove.append(position)
 
 
         return list(captured)
