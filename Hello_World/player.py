@@ -37,7 +37,7 @@ class Player:
         valid_move = self._environment.getValidMove()
         # print(valid_move)
         move = valid_move[random.randint(0, len(valid_move) - 1)]
-        if(len(self._environment._taken) == 0 and move == (2,2)):
+        if(len(self._environment._taken) == 0 and move == (self._environment.board_size / 2.0, self._environment.board_size / 2.0)):
             move = (2, 1)
         return ('PLACE', int(move[0]), int(move[1]))
     
@@ -61,8 +61,3 @@ class Player:
         else:
             self._environment.steal()
         
-        # print("\n=====================================================")
-        # print(self._environment._taken)
-        # print("Capture move:" + str(self._environment._captureCount))
-        # print(self._environment._captureMove)
-        # print("=====================================================\n")
