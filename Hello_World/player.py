@@ -126,6 +126,9 @@ class Player:
             action -- the action of either player label by the "player" attribute
     """
     def turn(self, player, action):
+        print(self._environment._capture["red"])
+        
+        print(self._environment._capture["blue"])
         if(action[0] == "PLACE"):
             self._environment.place((action[1], action[2]), player)
         else:
@@ -194,19 +197,39 @@ class Player:
         """
             f1: the current result longest chain
             f2: distance from all other opponent from lowest
+            f3: n * percantage of coord player hold ( the more coord, the more option) => avoid capture move
+            f4: the number of captured piece as a ratio to our #token on board
+            f5: we dont want our front tier to come contact to opponent piece as it might lead to capture move for them
         """
         dist_min = 0
         dist_max = 0
         count = 0
+        player_token_count = 0
         for coord in self._environment._taken.keys():
             if(self._environment._taken[coord] == player):
                dist_min += find_manhattan_dist(lowest, coord)
                dist_max += find_manhattan_dist(highest, coord)
                count += 1
-         
-        return math.fabs(int(lowest[dimension])
-                     - int(highest[dimension])) \
-                    +(0.3 * (dist_min / float(count)) + (dist_max / float(count)))
+            else:
+                player_token_count += 1
+        #:
+        opponent_label = "blue" if player == "red" else "red"
+        oponentAdj = 0
+        for token in [lowest, highest]: 
+            coords = [_ADD(token,s) for s in _HEX_STEPS]
+
+            for coord in coords:
+                try:
+                    if(self._environment._taken[coord] == opponent_label):
+                        oponentAdj+= 1
+                except KeyError:
+                    continue
+
+        return math.fabs(int(lowest[dimension]) - int(highest[dimension])) \
+                    +(0.3 * (dist_min / float(count)) + (dist_max / float(count)))\
+                    +(3 * (player_token_count / (self._environment.board_size))) \
+                    +(5 * (len(self._environment._capture)/ player_token_count)) \
+                    -(3 * (oponentAdj/ 16.0))
 
     def minimax(self, state, depth, player, closeList, searchAll = False):
         """

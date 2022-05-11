@@ -13,7 +13,7 @@ class Environment:
         self._available = set()
         # format (n, q)
         self.latestUpdate = {"red":(), "blue":()}
-        self._capture = []
+        self._capture = {"red":[], "blue":[]}
         
         for n in range(board_size):
             for q in range(board_size):
@@ -114,7 +114,7 @@ class Environment:
         for position in captured:
             self._taken.pop(position)
             self._available.add(position)
-            self._capture.append(position)
+            self._capture[opp_type].append(position)
 
 
         return list(captured)
