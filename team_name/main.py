@@ -9,9 +9,11 @@ This script contains the entry point to the program (the code in
 
 import sys
 import json
-from state_space import *
-from state import *
-from state_space import *
+
+from team_name.state_space import *
+from team_name.state import *
+from team_name.state_space import *
+from team_name.util import *
 import copy
 
 def main():
@@ -24,9 +26,9 @@ def main():
             board = Board(n,board_info)
             
             print_board(board.size, board.f_board)
-            state = State(board, "blue")
-            space = State_space(state, "blue")
-            print(space.decide())
+            # state = State(board, "blue")
+            # space = State_space(state, "blue")
+            # print(space.decide())
             # state_space = State_space(start_state, board, goal_state, False)
             # state_space.a_star_search()
 

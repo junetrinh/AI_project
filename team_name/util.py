@@ -1,7 +1,6 @@
 """
 COMP30024 Artificial Intelligence, Semester 1, 2021
 Project Part A: Searching
-
 This module contains some helper functions for printing actions and boards.
 Feel free to use and/or modify them to help you develop your program.
 """
@@ -14,14 +13,11 @@ def apply_ansi(str, bold=True, color=None):
     formatting on that string. Note: Not all terminals will be compatible!
     Don't worry if you don't know what this means - this is completely
     optional to use, and not required to complete the project!
-
     Arguments:
-
     str -- String to apply ANSI control codes to
     bold -- True if you want the text to be rendered bold
     color -- Colour of the text. Currently only red/"r" and blue/"b" are
         supported, but this can easily be extended if desired...
-
     """
     bold_code = "\033[1m" if bold else ""
     color_code = ""
@@ -34,7 +30,6 @@ def apply_ansi(str, bold=True, color=None):
 def print_coordinate(r, q, **kwargs):
     """
     Output an axial coordinate (r, q) according to the format instructions.
-
     Any keyword arguments are passed through to the print function.
     """
     print(f"({r},{q})", **kwargs)
@@ -43,9 +38,7 @@ def print_board(n, board_dict, message="", ansi=True, **kwargs):
     """
     For help with visualisation and debugging: output a board diagram with
     any information you like (tokens, heuristic values, distances, etc.).
-
     Arguments:
-
     n -- The size of the board
     board_dict -- A dictionary with (r, q) tuples as keys (following axial
         coordinate system from specification) and printable objects (e.g.
@@ -61,9 +54,7 @@ def print_board(n, board_dict, message="", ansi=True, **kwargs):
         False.
     
     Any other keyword arguments are passed through to the print function.
-
     Example:
-
         >>> board_dict = {
         ...     (0, 4): "hello",
         ...     (1, 1): "r",

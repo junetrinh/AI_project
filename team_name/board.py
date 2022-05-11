@@ -26,14 +26,13 @@ class Board:
         if(player == 'blue'):
             label = 'b'
         
-        if(coordinate in self._empty_coord):
-            self._empty_coord.remove(coordinate)
-            self.f_board[coordinate] = label
-            # update the board to ensure all capture occur
-            self.update(coordinate, player)
-            return True 
         
-        return False
+        self._empty_coord.remove(coordinate)
+        self.f_board[coordinate] = label
+        # update the board to ensure all capture occur
+        self.update(coordinate, player)
+        return True 
+
 
 
     def update(self, coord, player):
@@ -132,4 +131,5 @@ def filled_board(board_info, n):
     for i in s_board.keys():
         f_board[i] = s_board[i]
         empty_coord.remove(i)
+
     return f_board, empty_coord

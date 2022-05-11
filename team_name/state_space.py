@@ -1,5 +1,4 @@
 import math
-from team_name.util import *
 from team_name.board import *
 from random import *
 from math import *
@@ -30,7 +29,6 @@ class State_space:
         # this is base on the format of the action object
         if(action[0] == "PLACE"):
             self._environment.place(player, (action[1], action[2]))   
-
 
         # add the move into our version of current enviroment
         self._turn += 1
@@ -114,7 +112,7 @@ class State_space:
             # add it to a potential move
             minimax_list = []
             # create a clone of environment
-            
+            return list_empty_coord[0]
             for move in list_empty_coord:
                 clone_env = copy.deepcopy(self._environment)
                 clone_env.place(self._player , move)

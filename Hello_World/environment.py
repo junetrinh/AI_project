@@ -11,7 +11,8 @@ class Environment:
         self.board_size = board_size
         self._taken = dict()
         self._available = set()
-        self.latestUpdate = ()
+        # format (n, q)
+        self.latestUpdate = {"red":(), "blue":()}
 
         
         for n in range(board_size):
@@ -29,6 +30,20 @@ class Environment:
     def getValidMove(self):
         return list(self._available)
 
+    def revert(self, lastAction, player):
+        """
+            using the cached last player action we can revert the application of move in constant time
+            since 
+                insertion / deletion of an item in dict/ set is ~O(1)
+            -> this use in stead of store all copy of state
+        """
+        
+        self._taken.pop(self.latestUpdate[player])
+        self._available.add(self.latestUpdate[player])
+
+        #restore the last action
+        self._latestUpdate[player] = lastAction
+
 
     def place(self, position, token_label):
         """
@@ -41,7 +56,8 @@ class Environment:
         self._available.remove(position)
         self._taken[position] = token_label
         self._checkAdjust4Capture(position)
-        self.latestUpdate = (position, token_label)
+        self.latestUpdate[token_label] = position 
+        
 
     
     def steal(self):
@@ -49,9 +65,9 @@ class Environment:
             Assume that position is valid
         """
         # add the token of player who stole his/her opponent move
-        # steal only occur in first move
-        
-        prev_move = self.latestUpdate[0]
+        # steal only occur in first move, so the only token on board is definitely belong to our opponent who we want to steal from
+        prev_move = [move for move in self._taken.keys()]
+        prev_move = prev_move[0]
         
         self._taken[(prev_move[1], prev_move[0])] = "red" if(self._taken[prev_move] == "blue") else "blue"
 
@@ -70,7 +86,12 @@ class Environment:
         r, q = coord
         return r >= 0 and r < self.board_size and q >= 0 and q < self.board_size
 
+
     def _checkAdjust4Capture(self, lastMove):
+        """
+            Reference: This code is originate from the referee module
+            an update to ensure all token is remove if last action lead to a capture move.
+        """
         # reference: code from reference: pre-compile pattern of capture
         # Check each capture pattern intersecting with coord
         opp_type = self._taken[lastMove]
@@ -94,7 +115,6 @@ class Environment:
                         # Capturing has to be deferred in case of overlaps
                         # Both mid cell tokens should be captured
                         captured.update(coords[1:])
-                        print("+++++++++++++++++++++++++++++++++++++++++++++++")
                 except KeyError:
                     continue
         for position in captured:
