@@ -83,8 +83,10 @@ class Player:
             # we dont want to mess up our environment, so best to make a deep copy once
             state = copy.deepcopy(self._environment)
             # print("++=========================================>" + str(self._type))
-            move =self.minimax(state, int(self._environment.board_size /2), self._type)[0]
-
+            closeList = set()
+            move =self.minimax(state, int(3* self._environment.board_size), self._type, closeList)[0]
+            # print(move[0])
+            # print(move[1])
             return ('PLACE', int(move[0]), int(move[1]))
         
     """
@@ -135,6 +137,7 @@ class Player:
         #
         openList.append(lastPlay)
         closeList.add(lastPlay)
+        # print(state._available)
         while(len(openList) > 0):
             examinedCoord = openList.popleft()
             # check each coord 1 hex step from exmained cooordinate
@@ -143,12 +146,14 @@ class Player:
                 adj_coord = _ADD(examinedCoord, hex)
                 # we only care about coord that within the board and of which we have not visit before
                 if(state.inside_bounds(adj_coord) and adj_coord not in closeList):
-                    
+                    # print(adj_coord)
+                    # //print("153=============>")
+                    # print(adj_coord in state._available)
                     # check if a token with the same value as current player
                     if(adj_coord in state._available
-                        or state._taken[adj_coord] != lastPlay[1]):
+                        or state._taken[adj_coord] != player):
                         continue 
-                        
+                    # print("valid")
                     # check if it is either a new lowest layer or highest layer
                     if(adj_coord[dimension] < lowest[dimension]):
                         lowest = adj_coord
@@ -172,7 +177,7 @@ class Player:
         return str(math.fabs(int(lowest[dimension])
                      - int(highest[dimension])))
 
-    def minimax(self, state, depth, player ):
+    def minimax(self, state, depth, player, closeList ):
         """
             explore all the move that select using our heuristic
             then perform minimax till the end and rate it using our eval
@@ -189,12 +194,15 @@ class Player:
             # if return from out of depth, would be in format (True, Lowest:Tuple(n:int, q:int), Highest=: Tuple(n, q), dimension)
             # else it would be (True)
             # -> return (value, move)
+            print("----")
+            print(lastAction)
+            print("-------")
             if(len(result) == 4):
+               
                 return (
                     self.eval(result[1], result[2], result[3]),
                     lastAction)
-
-            return (math.inf, lastAction)
+            return (math.inf, lastAction) if player == self._type else (-math.inf, lastAction)
 
         # going through the heuristic favour potential move out of all possible move
         # adjacent node of the lowest -> aggressive strategy to expand our lead
@@ -202,7 +210,7 @@ class Player:
         # adjacent node of opponent move -> the potentially be defensive/ offensive that threaten a capture
         # a random move that might lead to more opportunity
         # max of 6 + 6 + 6  + 1 growth rate
-        value = (math.inf,) if Min else (-math.inf,)
+        value = (math.inf,lastAction) if Min else (-math.inf,lastAction)
         valid_move = self._environment.getValidMove()
 
         randMove = valid_move[random.randint(0, len(valid_move) - 1)]
@@ -211,6 +219,8 @@ class Player:
 
                 adj_coord = _ADD(examinedToken, hex)
 
+                if(adj_coord in closeList):
+                    continue
                 
                 if(adj_coord in state._taken):
                     continue
@@ -218,24 +228,31 @@ class Player:
                 if (not state.inside_bounds(adj_coord)):
                     # lie out side board
                     continue
-               
-                print("ADj===============================")
-                print(adj_coord)
+                txt = '(' + str(adj_coord) + ')'
+
+                # print('\033[2;31;43m ADD:' + txt + '\t\t\t\033[0;0m')
+                # print('\033[2;31;43m (' + ",".join(adj_coord)+ ') \033[0;0m')
                 # apply the action to state
                 
                 cachedLastAction = self._environment.latestUpdate[player]
+                
+                closeList.add(adj_coord)
                 state.place(adj_coord, player)
-
-                routeMinimax = self.minimax(state, depth - 1, opponentType)
+                routeMinimax = self.minimax(state, depth - 1, opponentType, closeList)
 
                 # restore state to this point
-                state.revertMove(cachedLastAction, player)
+                try:
+                    state.revertMove(cachedLastAction, player)
+                except KeyError:
+                    pass
+                txt = '(' + str(adj_coord) + ')'
 
+                # print('Remove:' + txt )
                 if(Min):
                     if(float(routeMinimax[0]) < float(value[0])):
                         value = routeMinimax
                 else: # max turn
                     if(float(routeMinimax[0]) > float(value[0])):
                         value = routeMinimax
-        print(state == self._environment)     
+         
         return value

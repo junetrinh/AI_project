@@ -37,9 +37,7 @@ class Environment:
                 insertion / deletion of an item in dict/ set is ~O(1)
             -> this use in stead of store all copy of state
         """
-        print(self._taken)
-        print(self.latestUpdate[player])
-        print("================")
+
         self._taken.pop(self.latestUpdate[player])
         self._available.add(self.latestUpdate[player])
 
@@ -60,9 +58,9 @@ class Environment:
         self._taken[position] = token_label
         self._checkAdjust4Capture(position)
         self.latestUpdate[token_label] = position 
-        print("After place:")
-        print(self._taken)
-        print("==================================================")
+        # print("After place:")
+        # print(self._taken)
+        # print("==================================================")
     
     def steal(self):
         """
