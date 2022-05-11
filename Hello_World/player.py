@@ -1,4 +1,5 @@
 import math
+from os import stat
 from turtle import hideturtle
 from Hello_World.environment import *
 import random
@@ -48,7 +49,7 @@ class Player:
         """
 
         # for the first n move it is just select a random move is sufficient (currently disable)
-        if( len(self._environment._taken) < 2):
+        if( len(self._environment._taken) < self._environment.board_size):
             # if we are blue, we are open to a chance to perform steal
             # check if opponent first move is too powerful ( the closer the move to the centre of board) the more
             # option it leave hence => more powerful
@@ -129,24 +130,17 @@ class Player:
         closeList = set()
         # perform BFS from the node expanding out
         # this will aid with the static eval
-        lowest = lastPlay[0]
-        highest = lastPlay[0]
-
+        lowest = lastPlay
+        highest = lastPlay
+        #
         openList.append(lastPlay)
         closeList.add(lastPlay)
-        print("146:OPEN LIST: ")
-        print(openList)
         while(len(openList) > 0):
             examinedCoord = openList.popleft()
-            print("152===========================================>" + str(examinedCoord))
             # check each coord 1 hex step from exmained cooordinate
             for hex in _HEX_STEPS:
 
                 adj_coord = _ADD(examinedCoord, hex)
-                print(adj_coord)
-                print(state.inside_bounds(adj_coord))
-                print(dimension)
-                print("++++++++++++++++++++")
                 # we only care about coord that within the board and of which we have not visit before
                 if(state.inside_bounds(adj_coord) and adj_coord not in closeList):
                     
@@ -160,8 +154,6 @@ class Player:
                         lowest = adj_coord
                     if(adj_coord[dimension] > highest[dimension]):
                         highest = adj_coord
-                    print(highest)
-                    print(lowest)
                     # check for complete chain
                     if(lowest[dimension] == 0 and 
                         highest[dimension] == self._environment.board_size -1):
@@ -170,15 +162,13 @@ class Player:
                     # add the node to queue so we can expand it
                     openList.append(adj_coord)
                     closeList.add(adj_coord)
-        # print("179==========>" + str(lowest))
-        # print("180==========>" + str(highest))
         if(depth == 0):
             return (True, lowest, highest, dimension)
 
         # we check all reachable token but found no chain
         return (False, lowest, highest, dimension)
 
-    def eval(lowest, highest, dimension):
+    def eval(self, lowest, highest, dimension):
         return str(math.fabs(int(lowest[dimension])
                      - int(highest[dimension])))
 
@@ -200,7 +190,9 @@ class Player:
             # else it would be (True)
             # -> return (value, move)
             if(len(result) == 4):
-                return (eval(result[1], result[2], reslult[3]), lastAction)
+                return (
+                    self.eval(result[1], result[2], result[3]),
+                    lastAction)
 
             return (math.inf, lastAction)
 
@@ -214,30 +206,36 @@ class Player:
         valid_move = self._environment.getValidMove()
 
         randMove = valid_move[random.randint(0, len(valid_move) - 1)]
-        print("219============>" + str(result))
         for hex in _HEX_STEPS:
-            for examinedToken in \
-                [result[1], result[2], self._environment.latestUpdate[opponentType], randMove]:
+            for examinedToken in [result[1], result[2], self._environment.latestUpdate[opponentType], randMove]:
 
                 adj_coord = _ADD(examinedToken, hex)
-                if not state.inside_bounds(adj_coord):
-                    # lie out side board
+
+                
+                if(adj_coord in state._taken):
                     continue
 
+                if (not state.inside_bounds(adj_coord)):
+                    # lie out side board
+                    continue
+               
+                print("ADj===============================")
+                print(adj_coord)
                 # apply the action to state
-                cachedLastAction = self.self._environment.latestUpdate[player]
+                
+                cachedLastAction = self._environment.latestUpdate[player]
                 state.place(adj_coord, player)
 
-                routeMinimax = minimax(state, depth - 1, opponentType)
+                routeMinimax = self.minimax(state, depth - 1, opponentType)
+
+                # restore state to this point
+                state.revertMove(cachedLastAction, player)
 
                 if(Min):
-                    if(routeMinimax[0] < value[0]):
+                    if(float(routeMinimax[0]) < float(value[0])):
                         value = routeMinimax
                 else: # max turn
-                    if(routeMinimax[0] > value[0]):
+                    if(float(routeMinimax[0]) > float(value[0])):
                         value = routeMinimax
-                
-                # restore state to this point
-                state.revert(cachedLastAction, player)
-
+        print(state == self._environment)     
         return value

@@ -30,19 +30,21 @@ class Environment:
     def getValidMove(self):
         return list(self._available)
 
-    def revert(self, lastAction, player):
+    def revertMove(self, lastAction, player):
         """
             using the cached last player action we can revert the application of move in constant time
             since 
                 insertion / deletion of an item in dict/ set is ~O(1)
             -> this use in stead of store all copy of state
         """
-        
+        print(self._taken)
+        print(self.latestUpdate[player])
+        print("================")
         self._taken.pop(self.latestUpdate[player])
         self._available.add(self.latestUpdate[player])
 
         #restore the last action
-        self._latestUpdate[player] = lastAction
+        self.latestUpdate[player] = lastAction
 
 
     def place(self, position, token_label):
@@ -53,12 +55,14 @@ class Environment:
                 position - Tuple(n, q)
                 token_label - character in ["red", "blue"]
         """
+        
         self._available.remove(position)
         self._taken[position] = token_label
         self._checkAdjust4Capture(position)
         self.latestUpdate[token_label] = position 
-        
-
+        print("After place:")
+        print(self._taken)
+        print("==================================================")
     
     def steal(self):
         """
