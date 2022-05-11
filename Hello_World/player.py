@@ -1,3 +1,4 @@
+from itertools import accumulate
 import math
 from os import stat
 from turtle import hideturtle
@@ -14,6 +15,16 @@ _HEX_STEPS = array([(1, -1), (1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1)],
 # Utility function to add two coord tuples
 _ADD = lambda a, b: (a[0] + b[0], a[1] + b[1])
 
+def z_axes(state):
+    return -state[0] - state[1]
+
+def find_manhattan_dist(tokenA, tokenB):
+
+        r_dis = tokenA[0] - tokenB[0]
+        q_dis = tokenA[1] - tokenB[1]
+        z_dis = z_axes(tokenA) - z_axes(tokenB)
+
+        return int((abs(r_dis) + abs(q_dis) + abs(z_dis)) / 2)
 class Player:
 
     
@@ -98,8 +109,6 @@ class Player:
                     move = move[1]
             else:
                 move = move[1]
-            print(move in self._environment._taken)
-            print(move in self._environment._available)
             return ('PLACE', int(move[0]), int(move[1]))
         
     """
@@ -170,7 +179,7 @@ class Player:
                     # check for complete chain
                     if(lowest[dimension] == 0 and 
                         highest[dimension] == self._environment.board_size -1):
-                        return (True,)
+                        return (True, lowest, highest, dimension)
                     
                     # add the node to queue so we can expand it
                     openList.append(adj_coord)
@@ -181,9 +190,23 @@ class Player:
         # we check all reachable token but found no chain
         return (False, lowest, highest, dimension)
 
-    def eval(self, lowest, highest, dimension):
-        return str(math.fabs(int(lowest[dimension])
-                     - int(highest[dimension])))
+    def eval(self, lowest, highest, dimension, player):
+        """
+            f1: the current result longest chain
+            f2: distance from all other opponent from lowest
+        """
+        dist_min = 0
+        dist_max = 0
+        count = 0
+        for coord in self._environment._taken.keys():
+            if(self._environment._taken[coord] == player):
+               dist_min += find_manhattan_dist(lowest, coord)
+               dist_max += find_manhattan_dist(highest, coord)
+               count += 1
+         
+        return math.fabs(int(lowest[dimension])
+                     - int(highest[dimension])) \
+                    +(0.3 * (dist_min / float(count)) + (dist_max / float(count)))
 
     def minimax(self, state, depth, player, closeList, searchAll = False):
         """
@@ -202,12 +225,8 @@ class Player:
             # if return from out of depth, would be in format (True, Lowest:Tuple(n:int, q:int), Highest=: Tuple(n, q), dimension)
             # else it would be (True)
             # -> return (value, move)
-            if(len(result) == 4):# out of depth
-                return (
-                    self.eval(result[1], result[2], result[3]),
-                    lastAction)
             # @win state
-            return (math.inf, lastAction) if player == self._type else (-math.inf, lastAction)
+            return (self.eval(result[1], result[2], result[3], player), lastAction) if player == self._type else (-self.eval(result[1], result[2], result[3], player), lastAction)
 
         # going through the heuristic favour potential move out of all possible move
         # adjacent node of the lowest -> aggressive strategy to expand our lead
@@ -217,7 +236,7 @@ class Player:
         # max of 6 + 6 + 6  + 1 growth rate
         valid_move = self._environment.getValidMove()
         randMove = valid_move[random.randint(0, len(valid_move) - 1)]
-        value = (math.inf, randMove) if Min else (-math.inf,randMove)
+        value = (9, randMove) if Min else (-9,randMove)
 
         if(searchAll):
             potentialList = list(state._available)
