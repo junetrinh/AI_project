@@ -22,7 +22,16 @@ for move in dictionary.keys():
 print(player._environment.latestUpdate)
 cloneState = copy.deepcopy(player._environment)
 closelist = set()
-print(player.minimax(cloneState, 10000, "blue", closelist))
+res = player.minimax(cloneState, 10000, "blue", closelist)
+print(res)
+
+if(res[0] < 0):
+    # we need to perform search all
+    print("SEARCH ALL")
+    cloneState = copy.deepcopy(player._environment)
+    closelist = set()
+    res = player.minimax(cloneState, 10000, "blue", closelist, 0, True)
+    print(res)
 
 # print(len(env._taken.keys()))
 # code that originate from the referee

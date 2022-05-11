@@ -13,7 +13,7 @@ class Environment:
         self._available = set()
         # format (n, q)
         self.latestUpdate = {"red":(), "blue":()}
-
+        self._capture = []
         
         for n in range(board_size):
             for q in range(board_size):
@@ -56,11 +56,9 @@ class Environment:
         
         self._available.remove(position)
         self._taken[position] = token_label
+
         self._checkAdjust4Capture(position)
         self.latestUpdate[token_label] = position 
-        # print("After place:")
-        # print(self._taken)
-        # print("==================================================")
     
     def steal(self):
         """
@@ -99,18 +97,12 @@ class Environment:
         opp_type = self._taken[lastMove]
         mid_type = "red" if opp_type == "blue" else "blue"
         captured = set()
-        # print("TYPE::::")
-        # print(opp_type)
-        # print(mid_type)
         # Check each capture pattern intersecting with coord
         for pattern in _CAPTURE_PATTERNS:
             coords = [_ADD(lastMove, s) for s in pattern]
             
             # No point checking if any coord is outside the board!
             if all(map(self.inside_bounds, coords)):
-                # if(self._type == "blue"):
-                #     print("++")
-                #     print(coords)
                 try:
                     tokens = [self._taken[coord] for coord in coords]
                     if tokens == [opp_type, mid_type, mid_type]:
@@ -122,6 +114,7 @@ class Environment:
         for position in captured:
             self._taken.pop(position)
             self._available.add(position)
+            self._capture.append(position)
 
 
         return list(captured)

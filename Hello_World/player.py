@@ -61,14 +61,12 @@ class Player:
                             , int(self._environment.board_size /2.0) + 1 )
                 # if the move is 2/6 move from the centre, we steal it
                 signifDist = int(1.0 /5.0 * self._environment.board_size)
-                # print("                                                    " + str(math.fabs(relativeCentre[dimension] + signifDist)))
                 if(move[0] > (relativeCentre[dimension] - signifDist) 
                     and move[0] < (relativeCentre[dimension] + signifDist) ):
                     return ('STEAL',)
             
             
             valid_move = self._environment.getValidMove()
-            # print(valid_move)
             move = valid_move[random.randint(0, len(valid_move) - 1)]
             if(len(self._environment._taken) == 0 
                 # check if move is thecentre of board
@@ -82,11 +80,26 @@ class Player:
         else:
             # we dont want to mess up our environment, so best to make a deep copy once
             state = copy.deepcopy(self._environment)
-            # print("++=========================================>" + str(self._type))
             closeList = set()
-            move =self.minimax(state, int(3* self._environment.board_size), self._type, closeList)[0]
-            # print(move[0])
-            # print(move[1])
+            move =self.minimax(state, int(3* self._environment.board_size), self._type, closeList)
+            # if using heuristic is not enough => for all instance min/opponent is winning
+            # then we will have to expand our option and search all available space
+            if(float(move[0]) < 0):
+                state = copy.deepcopy(self._environment)
+                closeList = set()
+                move = self.minimax(state, int(3* self._environment.board_size), self._type, closeList, True)
+                
+                #if move is still lead to min win, then we might as well play random move
+                if(float(move[0]) < 0):
+                    print("expand all")
+                    valid_move = self._environment.getValidMove()
+                    move = valid_move[random.randint(0, len(valid_move) - 1)]
+                else:
+                    move = move[1]
+            else:
+                move = move[1]
+            print(move in self._environment._taken)
+            print(move in self._environment._available)
             return ('PLACE', int(move[0]), int(move[1]))
         
     """
@@ -123,7 +136,6 @@ class Player:
         # check if there are a connect path
         # since last player make a move, only him can potentially win this turn
         # Since last update: alternate the latestUpdate in away we can retrieve last move of both player
-        # print("===========================================>" + str(player))
         lastPlay = state.latestUpdate[player]
 
         # red player connect from lowest n (index 0), vice versa
@@ -137,7 +149,7 @@ class Player:
         #
         openList.append(lastPlay)
         closeList.add(lastPlay)
-        # print(state._available)
+        
         while(len(openList) > 0):
             examinedCoord = openList.popleft()
             # check each coord 1 hex step from exmained cooordinate
@@ -146,14 +158,10 @@ class Player:
                 adj_coord = _ADD(examinedCoord, hex)
                 # we only care about coord that within the board and of which we have not visit before
                 if(state.inside_bounds(adj_coord) and adj_coord not in closeList):
-                    # print(adj_coord)
-                    # //print("153=============>")
-                    # print(adj_coord in state._available)
                     # check if a token with the same value as current player
                     if(adj_coord in state._available
                         or state._taken[adj_coord] != player):
-                        continue 
-                    # print("valid")
+                        continue
                     # check if it is either a new lowest layer or highest layer
                     if(adj_coord[dimension] < lowest[dimension]):
                         lowest = adj_coord
@@ -177,7 +185,7 @@ class Player:
         return str(math.fabs(int(lowest[dimension])
                      - int(highest[dimension])))
 
-    def minimax(self, state, depth, player, closeList ):
+    def minimax(self, state, depth, player, closeList, searchAll = False):
         """
             explore all the move that select using our heuristic
             then perform minimax till the end and rate it using our eval
@@ -187,21 +195,18 @@ class Player:
         # result can either be
         #   (False, Lowest:Tuple(n:int, q:int), Highest: Tuple(n, q), dimension) -> not complete
         #   (True,) -> complete
-        lastAction = self._environment.latestUpdate[player]
+        lastAction = state.latestUpdate[player]
         result = self.terminalCheck(state, player, depth)
 
         if(result[0]):
             # if return from out of depth, would be in format (True, Lowest:Tuple(n:int, q:int), Highest=: Tuple(n, q), dimension)
             # else it would be (True)
             # -> return (value, move)
-            print("----")
-            print(lastAction)
-            print("-------")
-            if(len(result) == 4):
-               
+            if(len(result) == 4):# out of depth
                 return (
                     self.eval(result[1], result[2], result[3]),
                     lastAction)
+            # @win state
             return (math.inf, lastAction) if player == self._type else (-math.inf, lastAction)
 
         # going through the heuristic favour potential move out of all possible move
@@ -210,15 +215,22 @@ class Player:
         # adjacent node of opponent move -> the potentially be defensive/ offensive that threaten a capture
         # a random move that might lead to more opportunity
         # max of 6 + 6 + 6  + 1 growth rate
-        value = (math.inf,lastAction) if Min else (-math.inf,lastAction)
         valid_move = self._environment.getValidMove()
-
         randMove = valid_move[random.randint(0, len(valid_move) - 1)]
+        value = (math.inf, randMove) if Min else (-math.inf,randMove)
+
+        if(searchAll):
+            potentialList = list(state._available)
+        else:
+            potentialList = [result[1], result[2], self._environment.latestUpdate[opponentType], randMove]
+
         for hex in _HEX_STEPS:
-            for examinedToken in [result[1], result[2], self._environment.latestUpdate[opponentType], randMove]:
+            for examinedToken in potentialList:
 
                 adj_coord = _ADD(examinedToken, hex)
-
+                # ensure we dont revert
+                if(adj_coord in self._environment._taken):
+                    continue
                 if(adj_coord in closeList):
                     continue
                 
@@ -228,26 +240,19 @@ class Player:
                 if (not state.inside_bounds(adj_coord)):
                     # lie out side board
                     continue
-                txt = '(' + str(adj_coord) + ')'
-
-                # print('\033[2;31;43m ADD:' + txt + '\t\t\t\033[0;0m')
-                # print('\033[2;31;43m (' + ",".join(adj_coord)+ ') \033[0;0m')
                 # apply the action to state
                 
                 cachedLastAction = self._environment.latestUpdate[player]
-                
+
                 closeList.add(adj_coord)
                 state.place(adj_coord, player)
-                routeMinimax = self.minimax(state, depth - 1, opponentType, closeList)
+                routeMinimax = self.minimax(state, depth - 1, opponentType, closeList, searchAll)
 
                 # restore state to this point
                 try:
                     state.revertMove(cachedLastAction, player)
                 except KeyError:
                     pass
-                txt = '(' + str(adj_coord) + ')'
-
-                # print('Remove:' + txt )
                 if(Min):
                     if(float(routeMinimax[0]) < float(value[0])):
                         value = routeMinimax
