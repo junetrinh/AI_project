@@ -93,6 +93,8 @@ class Player:
             state = copy.deepcopy(self._environment)
             closeList = set()
             move =self.minimax(state, int(3* self._environment.board_size), self._type, closeList)
+            
+            print(move)
             # if using heuristic is not enough => for all instance min/opponent is winning
             # then we will have to expand our option and search all available space
             if(float(move[0]) < 0):
@@ -100,6 +102,7 @@ class Player:
                 closeList = set()
                 move = self.minimax(state, int(3* self._environment.board_size), self._type, closeList, True)
                 
+                print(move)
                 #if move is still lead to min win, then we might as well play random move
                 if(float(move[0]) < 0):
                     print("expand all")
@@ -126,9 +129,6 @@ class Player:
             action -- the action of either player label by the "player" attribute
     """
     def turn(self, player, action):
-        print(self._environment._capture["red"])
-        
-        print(self._environment._capture["blue"])
         if(action[0] == "PLACE"):
             self._environment.place((action[1], action[2]), player)
         else:
@@ -259,7 +259,7 @@ class Player:
         # max of 6 + 6 + 6  + 1 growth rate
         valid_move = self._environment.getValidMove()
         randMove = valid_move[random.randint(0, len(valid_move) - 1)]
-        value = (9, randMove) if Min else (-9,randMove)
+        value = (self.eval(result[1], result[2], result[3], player), randMove) if Min else (-self.eval(result[1], result[2], result[3], player),randMove)
 
         if(searchAll):
             potentialList = list(state._available)
