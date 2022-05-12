@@ -60,7 +60,7 @@ class Player:
         """
 
         # for the first n move it is just select a random move is sufficient (currently disable)
-        if( len(self._environment._taken) < self._environment.board_size):
+        if(True or  len(self._environment._taken) < self._environment.board_size):
             # if we are blue, we are open to a chance to perform steal
             # check if opponent first move is too powerful ( the closer the move to the centre of board) the more
             # option it leave hence => more powerful
@@ -72,9 +72,9 @@ class Player:
                             , int(self._environment.board_size /2.0) + 1 )
                 # if the move is 2/6 move from the centre, we steal it
                 signifDist = int(1.0 /5.0 * self._environment.board_size)
-                if(move[0] > (relativeCentre[dimension] - signifDist) 
-                    and move[0] < (relativeCentre[dimension] + signifDist) ):
-                    return ('STEAL',)
+                # if(move[0] > (relativeCentre[dimension] - signifDist) 
+                #     and move[0] < (relativeCentre[dimension] + signifDist) ):
+                #     return ('STEAL',)
             
             
             valid_move = self._environment.getValidMove()
@@ -92,27 +92,26 @@ class Player:
             # we dont want to mess up our environment, so best to make a deep copy once
             state = copy.deepcopy(self._environment)
             closeList = set()
-            move =self.minimax(state, int(3* self._environment.board_size), self._type, closeList, True)
+            move =self.minimax(state, int(3* self._environment.board_size), self._type, closeList)
             
             print(move)
-            move = move[1]
-            # # if using heuristic is not enough => for all instance min/opponent is winning
-            # # then we will have to expand our option and search all available space
-            # if(float(move[0]) < 0):
-            #     state = copy.deepcopy(self._environment)
-            #     closeList = set()
-            #     move = self.minimax(state, int(3* self._environment.board_size), self._type, closeList, True)
+            # if using heuristic is not enough => for all instance min/opponent is winning
+            # then we will have to expand our option and search all available space
+            if(float(move[0]) < 0):
+                state = copy.deepcopy(self._environment)
+                closeList = set()
+                move = self.minimax(state, int(3* self._environment.board_size), self._type, closeList, True)
                 
-            #     print(move)
-            #     #if move is still lead to min win, then we might as well play random move
-            #     if(float(move[0]) < 0):
-            #         print("expand all")
-            #         valid_move = self._environment.getValidMove()
-            #         move = valid_move[random.randint(0, len(valid_move) - 1)]
-            #     else:
-            #         move = move[1]
-            # else:
-            #     move = move[1]
+                print(move)
+                #if move is still lead to min win, then we might as well play random move
+                if(float(move[0]) < 0):
+                    print("expand all")
+                    valid_move = self._environment.getValidMove()
+                    move = valid_move[random.randint(0, len(valid_move) - 1)]
+                else:
+                    move = move[1]
+            else:
+                move = move[1]
             return ('PLACE', int(move[0]), int(move[1]))
         
     """
@@ -205,15 +204,15 @@ class Player:
         # compute f1:
         playerADist = math.fabs(int(lowest[dimension]) - int(highest[dimension]))
         opponent_label = "blue" if player == "red" else "red"
-        res = self.terminalCheck(state, opponent_label)
+        res = state.terminalCheck(state, opponent_label)
         oppDim = 0 if dimension == 1 else 1
-        playerBDist = math.fabs(int(res[1][oppDim]) - int(res[2][oppDim]))
+        playerBDist = math.fabs(int(res[oppDim]) - int(res[oppDim]))
 
         if(player == self._type):
-            f1 = 1.5 * playerBDist - playerADist - 1
+            f1 = playerADist - playerBDist -1
         else:
-            f1 = 1.5 * playerADist - playerBDist -  1
-        
+            f1 = playerBDist - playerADist - 1
+
         return f1
         dist_min = 0
         dist_max = 0
@@ -238,12 +237,14 @@ class Player:
                         oponentAdj+= 1
                 except KeyError:
                     continue
-
-        return math.fabs(int(lowest[dimension]) - int(highest[dimension])) \
-                    +(0.3 * (dist_min / float(count)) + (dist_max / float(count)))\
-                    +(3 * (player_token_count / (self._environment.board_size))) \
-                    +(5 * (len(self._environment._capture)/ player_token_count)) \
-                    -(3 * (oponentAdj/ 16.0))
+        # find longest chain of the oponent
+        res = state.terminalCheck(state, opponent_label)
+        oppDim = 0 if dimension == 1 else 1
+        f1 =  math.fabs(int(lowest[dimension]) - int(highest[dimension])) - (math.fabs(int(res[oppDim]) - int(res[oppDim])) + 1)
+        f2 = (0.05 * (dist_min / float(count)) + (dist_max / float(count)))
+        f3 = (2 * (len(self._environment._capture)/ player_token_count))
+        f4 = (2 * (oponentAdj/ 16.0))
+        return f1 if(player == self._type) else -f1
 
     def minimax(self, state, depth, player, closeList, searchAll = False):
         """
@@ -273,7 +274,7 @@ class Player:
         # max of 6 + 6 + 6  + 1 growth rate
         valid_move = self._environment.getValidMove()
         randMove = valid_move[random.randint(0, len(valid_move) - 1)]
-        value = (self.eval(result[1], result[2], result[3], player, state), randMove) if Min else (-self.eval(result[1], result[2], result[3], player, state),randMove)
+        value = (self.eval(result[1], result[2], result[3], player, state), randMove) if Min else (-self.eval(result[1], result[2], result[3], player, state, state),randMove)
 
         if(searchAll):
             potentialList = list(state._available)
