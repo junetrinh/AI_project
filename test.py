@@ -1,5 +1,5 @@
-from Hello_World.player import *
-from Hello_World.environment import *
+from Hello_World_1.player import *
+from Hello_World_1.environment import *
 from numpy import zeros, array, roll, vectorize
 
 player = Player("blue", 9)

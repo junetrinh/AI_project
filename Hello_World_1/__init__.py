@@ -5,4 +5,4 @@
 # example import below, you can define it in another file and import
 # it into this module with the name 'Player':
 
-from team_name.player import Player
+from Hello_World_1.player import Player

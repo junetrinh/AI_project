@@ -60,7 +60,8 @@ class Player:
         """
 
         # for the first n move it is just select a random move is sufficient (currently disable)
-        if(True or  len(self._environment._taken) < self._environment.board_size):
+        if( len(self._environment._taken) < int(4/3 *self._environment.board_size )):
+            print("===============HERE===================")
             # if we are blue, we are open to a chance to perform steal
             # check if opponent first move is too powerful ( the closer the move to the centre of board) the more
             # option it leave hence => more powerful
@@ -76,27 +77,67 @@ class Player:
                     and move[0] < (relativeCentre[dimension] + signifDist) ):
                     return ('STEAL',)
             
+            # i need to improve the initial n move strategy instead of random move
+            # so i want to start a chain in the middle and try to connect to the the highest level
+            dimension = 0 if(self._type == "red") else 1
+            # find the exist coord in the first level
+            firstNode = (0, (int(self._environment.board_size /2.0) + 1)) if(dimension == 0) else ((int(self._environment.board_size /2.0) + 1), 0)
+            for i in range(self._environment.board_size):
+                node = (0, i) if (dimension == 0) else (i, 0)
+
+                if(node in self._environment._taken):
+                    firstNode = node 
+                    print("=============================================================")
+                    break
+                if(i == self._environment.board_size - 1 ):
+                    print("1=============================================================")
+                    return ('PLACE', int(node[0]), int(node[1]))
+            openList = deque()
+            closeList = set()
+            # perform BFS from the node expanding out
+            # this will aid with the static eval
+            lowest = firstNode
+            highest = firstNode
+            #
+            openList.append(firstNode)
+            closeList.add(firstNode)
             
-            valid_move = self._environment.getValidMove()
-            move = valid_move[random.randint(0, len(valid_move) - 1)]
-            if(len(self._environment._taken) == 0 
-                # check if move is thecentre of board
-                and (self._environment.board_size % 2 != 0 
-                and (move[0] == int(self._environment.board_size /2.0) + 1 
-                and move[1] == int(self._environment.board_size /2.0) + 1))):
+            while(len(openList) > 0):
+                examinedCoord = openList.popleft()
+                # check each coord 1 hex step from exmained cooordinate
+                for hex in _HEX_STEPS:
 
-                move = (move[0], move[1] + int(random() * 2))
+                    adj_coord = _ADD(examinedCoord, hex)
+                    # we only care about coord that within the board and of which we have not visit before
+                    if(self._environment.inside_bounds(adj_coord) and adj_coord not in closeList):
+                        # check if a token with the same value as current player
+                        if(adj_coord in self._environment._available
+                            or self._environment._taken[adj_coord] != self._type):
+                            continue
+                        # check if it is either a new lowest layer or highest layer
+                        if(adj_coord[dimension] < lowest[dimension]):
+                            lowest = adj_coord
+                        if(adj_coord[dimension] > highest[dimension]):
+                            highest = adj_coord
+                        
+                        # add the node to queue so we can expand it
+                        openList.append(adj_coord)
+                        closeList.add(adj_coord)
+            # from the highest node try find way to highest
+            for hex in _HEX_STEPS:
 
-            return ('PLACE', int(move[0]), int(move[1]))
+                adj_coord = _ADD(examinedCoord, hex)
+                if(adj_coord[dimension] > highest[dimension]
+                    and adj_coord in self._environment._available):
+                    return ('PLACE', int(adj_coord[0]), int(adj_coord[1]))
+            
         else:
             # we dont want to mess up our environment, so best to make a deep copy once
             state = copy.deepcopy(self._environment)
             closeList = set()
             move =self.minimax(state, int(3* self._environment.board_size), self._type, closeList)
-            
-            print(move)
-            # if using heuristic is not enough => for all instance min/opponent is winning
-            # then we will have to expand our option and search all available space
+            # # if using heuristic is not enough => for all instance min/opponent is winning
+            # # then we will have to expand our option and search all available space
             if(float(move[0]) < 0):
                 state = copy.deepcopy(self._environment)
                 closeList = set()
@@ -201,19 +242,34 @@ class Player:
             f4: the number of captured piece as a ratio to our #token on board
             f5: we dont want our front tier to come contact to opponent piece as it might lead to capture move for them
         """
-        # compute f1:
-        playerADist = math.fabs(int(lowest[dimension]) - int(highest[dimension]))
-        opponent_label = "blue" if player == "red" else "red"
-        res = state.terminalCheck(state, opponent_label)
-        oppDim = 0 if dimension == 1 else 1
-        playerBDist = math.fabs(int(res[oppDim]) - int(res[oppDim]))
-
+        # compute f1: the longest chain of player 
+        # check if the lowest, highest is belong to max
+        f1 = 0
+        maxLowest = lowest
+        maxHighest = highest
         if(player == self._type):
-            f1 = playerADist - playerBDist -1
+            f1 =  math.fabs(int(lowest[dimension]) - int(highest[dimension]))
         else:
-            f1 = playerBDist - playerADist - 1
+            res =  self.terminalCheck(state, self._type)
+            maxLowest = res[1]
+            maxHighest = res[2]
+            f1 =  math.fabs(int(maxLowest[res[3]]) - int(maxHighest[res[3]]))
+        
+        minLabel = "red" if self._type == "blue" else "blue"
+        dist_min = 0
+        dist_max = 0
+        count = 0
+        player_token_count = 0
+        for coord in self._environment._taken.keys():
+            if(self._environment._taken[coord] == minLabel):
+               dist_min += find_manhattan_dist(maxLowest, coord)
+               dist_max += find_manhattan_dist(maxHighest, coord)
+               count += 1
+            else:
+                player_token_count += 1
+        f2 = (0.3 * (dist_min / float(count)) + (dist_max / float(count)))
 
-        return f1
+        return f1 + f2
         dist_min = 0
         dist_max = 0
         count = 0
@@ -237,14 +293,12 @@ class Player:
                         oponentAdj+= 1
                 except KeyError:
                     continue
-        # find longest chain of the oponent
-        res = state.terminalCheck(state, opponent_label)
-        oppDim = 0 if dimension == 1 else 1
-        f1 =  math.fabs(int(lowest[dimension]) - int(highest[dimension])) - (math.fabs(int(res[oppDim]) - int(res[oppDim])) + 1)
-        f2 = (0.05 * (dist_min / float(count)) + (dist_max / float(count)))
-        f3 = (2 * (len(self._environment._capture)/ player_token_count))
-        f4 = (2 * (oponentAdj/ 16.0))
-        return f1 if(player == self._type) else -f1
+
+        return math.fabs(int(lowest[dimension]) - int(highest[dimension])) \
+                    +(0.3 * (dist_min / float(count)) + (dist_max / float(count)))\
+                    +(3 * (player_token_count / (self._environment.board_size))) \
+                    +(5 * (len(self._environment._capture)/ player_token_count)) \
+                    -(3 * (oponentAdj/ 16.0))
 
     def minimax(self, state, depth, player, closeList, searchAll = False):
         """
@@ -274,7 +328,7 @@ class Player:
         # max of 6 + 6 + 6  + 1 growth rate
         valid_move = self._environment.getValidMove()
         randMove = valid_move[random.randint(0, len(valid_move) - 1)]
-        value = (self.eval(result[1], result[2], result[3], player, state), randMove) if Min else (-self.eval(result[1], result[2], result[3], player, state, state),randMove)
+        value = (self.eval(result[1], result[2], result[3], player, state), randMove) if Min else (-self.eval(result[1], result[2], result[3], player, state),randMove)
 
         if(searchAll):
             potentialList = list(state._available)

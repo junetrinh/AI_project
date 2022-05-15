@@ -1,90 +1,45 @@
-from numpy import zeros, array, roll, vectorize
-class Environment:
-    """
-        This is data of the board
-    """
+"""
+    This unit keep track of the fully observable, sequential environment
+"""
+from Hello_World.util import *
 
-    def __init__(self, board_size, taken=False):
+class Environment:
+
+    def __init__(self, board_size, init_board = False):
         """
-            complexity of create n^2
+            Arguments:
+
+                board_size - Integer
+                init_board - dict((n, q): "token_label" in ["red", "blue"])
         """
-        self.board_size = board_size
+
+        self.size = board_size
+        
         self._taken = dict()
         self._available = set()
-        # format (n, q)
-        self.latestUpdate = {"red":(), "blue":()}
-        self._capture = {"red":[], "blue":[]}
+        self._capture = {
+            "red": dict(), # (n, q) : [(n,q)]
+            "blue": dict()
+        }
         
-        for n in range(board_size):
-            for q in range(board_size):
+        self.lastMove = {
+            "red": (),
+            "blue": ()
+        }
 
-                if( taken != False):
-                    if((n,q) in taken):
-                        self._taken[(n, q)] = taken[(n, q)]
+        # if there are an init board that is not empty add them
+        for n in range(self.size):
+            for q in range(self.size):
+
+                if(init_board):
+                    if((n, q) in init_board):
+                        self._taken[(n, q)] = init_board[(n, q)]
                     else:
                         self._available.add((n, q))
-                
-                else:
-                    self._available.add((n, q))
     
-    def getValidMove(self):
+
+    def getValidMoves(self):
         return list(self._available)
-
-    def revertMove(self, lastAction, player):
-        """
-            using the cached last player action we can revert the application of move in constant time
-            since 
-                insertion / deletion of an item in dict/ set is ~O(1)
-            -> this use in stead of store all copy of state
-        """
-
-        self._taken.pop(self.latestUpdate[player])
-        self._available.add(self.latestUpdate[player])
-
-        #restore the last action
-        self.latestUpdate[player] = lastAction
-
-
-    def place(self, position, token_label):
-        """
-            Assume that position adding is valid
-
-            Arguments:
-                position - Tuple(n, q)
-                token_label - character in ["red", "blue"]
-        """
-        
-        self._available.remove(position)
-        self._taken[position] = token_label
-
-        self._checkAdjust4Capture(position)
-        self.latestUpdate[token_label] = position 
-    
-    def steal(self):
-        """
-            Assume that position is valid
-        """
-        # add the token of player who stole his/her opponent move
-        # steal only occur in first move, so the only token on board is definitely belong to our opponent who we want to steal from
-        prev_move = [move for move in self._taken.keys()]
-        prev_move = prev_move[0]
-        
-        self._taken[(prev_move[1], prev_move[0])] = "red" if(self._taken[prev_move] == "blue") else "blue"
-
-        # if the result of stealing opponent move is @ a different coordinate
-        if(prev_move != (prev_move[1], prev_move[0])):
-            self._available.remove((prev_move[1], prev_move[0]))
-            self._taken.pop(prev_move)
-            self._available.add(prev_move)
-
-    
-    def inside_bounds(self, coord):
-        """
-        REFERENC: code originate from the referee module
-        True iff coord inside board bounds.
-        """
-        r, q = coord
-        return r >= 0 and r < self.board_size and q >= 0 and q < self.board_size
 
 
     def _checkAdjust4Capture(self, lastMove):
@@ -114,24 +69,76 @@ class Environment:
         for position in captured:
             self._taken.pop(position)
             self._available.add(position)
-            self._capture[opp_type].append(position)
+        
+        self._capture[opp_type][lastMove] = captured
 
 
         return list(captured)
 
-                 
-            
+
+    def place(self, position, label):
+        """
+            Assume that position adding is valid
+
+            Arguments:
+                position - Tuple(n, q)
+                label - character in ["red", "blue"]
+        """
+        self._available.remove(position)
+        self._taken[position] = label
+        self._checkAdjust4Capture(position)
+        self.lastMove[label] = position
+
     
+    def steal(self):
+        """
+            steal only occur for second player in their first move (blue)
+        """
+        # retrieve the first move of red.
+        move = self.lastMove["red"]
+        stealMove = (move[1], move(0))
+        if(move == () or len(self._taken.keys()) != 1):
+            # invalid
+            return 
         
-# code that originate from the referee
-# Utility function to add two coord tuples
-_ADD = lambda a, b: (a[0] + b[0], a[1] + b[1])
+        self._taken[stealMove] = "blue"
 
-# Neighbour hex steps in clockwise order
-_HEX_STEPS = array([(1, -1), (1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1)], 
-    dtype="i,i")
+        # clear the old move if appropriate
+        if(move != stealMove):
+            self._available.remove(stealMove)
+            self._taken.pop(move)
+            self._available.add(move)
+    
 
-_CAPTURE_PATTERNS = [[_ADD(n1, n2), n1, n2] 
-    for n1, n2 in 
-        list(zip(_HEX_STEPS, roll(_HEX_STEPS, 1))) + 
-        list(zip(_HEX_STEPS, roll(_HEX_STEPS, 2)))]
+    def revertMove(self, lastAction, player):
+        """
+            using the cached last player action we can revert the application of move in constant time
+            since 
+                insertion / deletion of an item in dict/ set is ~O(1)
+            -> this use in stead of store all copy of state
+        """
+
+        self._taken.pop(self.lastMove[player])
+        self._available.add(self.lastMove[player])
+
+        # check if last move cause any capture, if so revert
+        opponent = "red" if player == "blue" else "blue"
+        for captureMove in self._capture[player]:
+            if(captureMove == lastAction):
+                for capture in self._capture[player][captureMove]:
+                    self._available.remove(capture)
+                    self._taken[capture] = opponent
+
+                self._capture[player].pop(captureMove)
+
+        #restore the last action
+        self.lastMove[player] = lastAction
+
+
+    def inside_bounds(self, coord):
+        """
+        REFERENC: code originate from the referee module
+        True iff coord inside board bounds.
+        """
+        r, q = coord
+        return r >= 0 and r < self.board_size and q >= 0 and q < self.board_size
