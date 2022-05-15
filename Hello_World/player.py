@@ -60,7 +60,7 @@ class Player:
         """
 
         # for the first n move it is just select a random move is sufficient (currently disable)
-        if( len(self._environment._taken) < self._environment.board_size):
+        if( len(self._environment._taken) < (3/7 *self._environment.board_size)):
             # if we are blue, we are open to a chance to perform steal
             # check if opponent first move is too powerful ( the closer the move to the centre of board) the more
             # option it leave hence => more powerful
@@ -85,34 +85,17 @@ class Player:
                 and (move[0] == int(self._environment.board_size /2.0) + 1 
                 and move[1] == int(self._environment.board_size /2.0) + 1))):
 
-                move = (move[0], move[1] + int(random() * 2))
+                move = (move[0], move[1] + 1)
 
             return ('PLACE', int(move[0]), int(move[1]))
         else:
             # we dont want to mess up our environment, so best to make a deep copy once
             state = copy.deepcopy(self._environment)
             closeList = set()
-            move =self.minimax(state, int(3* self._environment.board_size), self._type, closeList, True)
-            
-            print(move)
+            move =self.minimax(state, int(3* self._environment.board_size), self._type, closeList)
+    
             move = move[1]
-            # # if using heuristic is not enough => for all instance min/opponent is winning
-            # # then we will have to expand our option and search all available space
-            # if(float(move[0]) < 0):
-            #     state = copy.deepcopy(self._environment)
-            #     closeList = set()
-            #     move = self.minimax(state, int(3* self._environment.board_size), self._type, closeList, True)
-                
-            #     print(move)
-            #     #if move is still lead to min win, then we might as well play random move
-            #     if(float(move[0]) < 0):
-            #         print("expand all")
-            #         valid_move = self._environment.getValidMove()
-            #         move = valid_move[random.randint(0, len(valid_move) - 1)]
-            #     else:
-            #         move = move[1]
-            # else:
-            #     move = move[1]
+  
             return ('PLACE', int(move[0]), int(move[1]))
         
     """
@@ -212,40 +195,30 @@ class Player:
         if(player == self._type):
             f1 = 1.5 * playerBDist - playerADist - 1
         else:
-            f1 = 1.5 * playerADist - playerBDist -  1
+            f1 = 1.5 * playerADist - playerBDist - 1
         
-        return f1
+
+        #f2 total distance to other piece
         dist_min = 0
         dist_max = 0
         count = 0
-        player_token_count = 0
+        opp_token_count = 0
         for coord in self._environment._taken.keys():
             if(self._environment._taken[coord] == player):
                dist_min += find_manhattan_dist(lowest, coord)
                dist_max += find_manhattan_dist(highest, coord)
                count += 1
             else:
-                player_token_count += 1
-        #:
-        opponent_label = "blue" if player == "red" else "red"
-        oponentAdj = 0
-        for token in [lowest, highest]: 
-            coords = [_ADD(token,s) for s in _HEX_STEPS]
+                opp_token_count += 1
+        f2 = ((dist_min / float(count)) + (dist_max / float(count)))
 
-            for coord in coords:
-                try:
-                    if(self._environment._taken[coord] == opponent_label):
-                        oponentAdj+= 1
-                except KeyError:
-                    continue
+        #f3: least number of opponent
+        f3 = 7 * (opp_token_count / state.board_size)
 
-        return math.fabs(int(lowest[dimension]) - int(highest[dimension])) \
-                    +(0.3 * (dist_min / float(count)) + (dist_max / float(count)))\
-                    +(3 * (player_token_count / (self._environment.board_size))) \
-                    +(5 * (len(self._environment._capture)/ player_token_count)) \
-                    -(3 * (oponentAdj/ 16.0))
+        return 1.2* f1 + 0.3 * f2 - f3
 
-    def minimax(self, state, depth, player, closeList, searchAll = False):
+
+    def minimax(self, state, depth, player, closeList):
         """
             explore all the move that select using our heuristic
             then perform minimax till the end and rate it using our eval
@@ -275,10 +248,8 @@ class Player:
         randMove = valid_move[random.randint(0, len(valid_move) - 1)]
         value = (self.eval(result[1], result[2], result[3], player, state), randMove) if Min else (-self.eval(result[1], result[2], result[3], player, state),randMove)
 
-        if(searchAll):
-            potentialList = list(state._available)
-        else:
-            potentialList = [result[1], result[2], self._environment.latestUpdate[opponentType], randMove]
+        
+        potentialList = [result[1], result[2],self._environment.latestUpdate[player],self._environment.latestUpdate[opponentType], randMove]
 
         for hex in _HEX_STEPS:
             for examinedToken in potentialList:
@@ -302,7 +273,7 @@ class Player:
 
                 closeList.add(adj_coord)
                 state.place(adj_coord, player)
-                routeMinimax = self.minimax(state, depth - 1, opponentType, closeList, searchAll)
+                routeMinimax = self.minimax(state, depth - 1, opponentType, closeList)
 
                 # restore state to this point
                 try:

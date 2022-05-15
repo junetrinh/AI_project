@@ -13,7 +13,10 @@ class Environment:
         self._available = set()
         # format (n, q)
         self.latestUpdate = {"red":(), "blue":()}
-        self._capture = {"red":[], "blue":[]}
+        self._capture = {
+            "red":dict(), # (n,q) - capture move : [(n, q), - capture pieces]
+            "blue":dict()
+            }
         
         for n in range(board_size):
             for q in range(board_size):
@@ -40,6 +43,15 @@ class Environment:
 
         self._taken.pop(self.latestUpdate[player])
         self._available.add(self.latestUpdate[player])
+        # check if last move cause any capture, if so revert
+        opponent = "red" if player == "blue" else "blue"
+        for captureMove in list(self._capture[player].keys()):
+            if(captureMove == lastAction):
+                for capture in self._capture[player][captureMove]:
+                    self._available.remove(capture)
+                    self._taken[capture] = opponent
+
+                self._capture[player].pop(captureMove)
 
         #restore the last action
         self.latestUpdate[player] = lastAction
@@ -114,7 +126,8 @@ class Environment:
         for position in captured:
             self._taken.pop(position)
             self._available.add(position)
-            self._capture[opp_type].append(position)
+
+        self._capture[opp_type][lastMove] = captured
 
 
         return list(captured)
